@@ -424,19 +424,21 @@ private boolean keepShadowCopy(){
 
 위의 함수는 `ShadowCopy` 가 `ON` 이거나 (`DEFAULT` 이고 Expire 이벤트 리스너가 있는 경우) `true`, 그렇지 않으면 `false` 를 반환한다.
 
--   put: `keepShadowCopy` 가 `true` 인 경우, `:phantom` 접미사를 가진 키를 생성한다.
--   delete: `keepShadowCopy` 가 `true` 인 경우, `:phantom` 접미사를 가진 키를 삭제한다.
--   update: `keepShadowCopy` 가 `true` 인 경우, `TTL` 시간이 초과된 경우 `:phantom` 접미사를 가진 키를 삭제한다. `TTL` 시간이 초과되지 않은 경우, `:phantom` 접미사를 가진 키의 값과 `TTL` 시간을 업데이트한다.
+- put: `keepShadowCopy` 가 `true` 인 경우, `:phantom` 접미사를 가진 키를 생성한다.
+- delete: `keepShadowCopy` 가 `true` 인 경우, `:phantom` 접미사를 가진 키를 삭제한다.
+- update: `keepShadowCopy` 가 `true` 인 경우, `TTL` 시간이 초과된 경우 `:phantom` 접미사를 가진 키를 삭제한다. `TTL` 시간이 초과되지 않은 경우, `:phantom` 접미사를 가진 키의 값과 `TTL` 시간을 업데이트한다.
 
 이 옵션이 켜져 있어야 `RedisKeyExpiredEvent` 를 `value` 값과 같이 사용할 수 있다. 하지만 문제점으로 `ShadowCopy` 가 켜져 있으면, `:phantom` 이라는 접미사를 가진 키가 생성되어 메모리 사용량이 증가한다. `RedisKeyExpiredEvent` 를 사용하지 않는다면, `ShadowCopy` 를 `OFF` 로 설정해야 메모리 사용량을 줄일 수 있다.[^3], [^4]
 
-`ShadowCopy` 옵션을 사용 시 다음과 같이, `:phantom` 이라는 접미사를 가진 키가 생성되는 것을 확인할 수 있다. **`phantom` 키 값은 원본 키 값보다 5분 (300초) 더 유지된다.**
+`ShadowCopy` 옵션을 사용 시 다음과 같이, `:phantom` 이라는 접미사를 가진 키가 생성되는 것을 확인할 수 있다. *
+*`phantom` 키 값은 원본 키 값보다 5분 (300초) 더 유지된다.**
 
 ![Redis Phantom](/img/redis_phantom.png)
 
 ## 왜 `RedisKeyExpiredEvent` 이벤트를 사용하는가?
 
-여러가지 이유가 있겠지만, 가장 중요한 것은 **개발자의 고통을 크게 줄여줄 수 있기 때문이라고 생각한다**. 다른 문서나 개발 예시들을 보면 비교적 로우 레벨인 `redisTemplate` 를 사용하는 것을 쉽게 볼 수 있는데, `redisTemplate`를 사용하기 위해서는 다음과 같은 요구사항들과 과정을 거쳐야한다.
+여러가지 이유가 있겠지만, 가장 중요한 것은 **개발자의 고통을 크게 줄여줄 수 있기 때문이라고 생각한다
+**. 다른 문서나 개발 예시들을 보면 비교적 로우 레벨인 `redisTemplate` 를 사용하는 것을 쉽게 볼 수 있는데, `redisTemplate`를 사용하기 위해서는 다음과 같은 요구사항들과 과정을 거쳐야한다.
 
 - 모든 사소한 데이터의 CRUD 작업을 직접 구현해야 한다.
 - 모든 `TTL` 값을 직접 실행해야 한다.
@@ -550,13 +552,13 @@ public class KeyExpirationEventMessageListener extends KeyspaceEventMessageListe
 
 코드를 보면 알 수 있듯이, 이전에 말한 다음 과정을 통해 이벤트가 발행된다.
 
-1.  `ApplicationEventPublisher` (실 객체는 `ApplicationContext` 구현체) 를 주입받는다.
-2.  Keyspace notification 메시지 (Key Expire) 를 전달받는다.
-3.  `RedisKeyValueAdapter` 내부에 있는 정적 클래스인 `MappingExpirationListener` 클래스에게 Key Expire 이벤트 처리를 위임한다.
-4.  `MappingExpirationListener` 클래스는 전달받은 메시지 객체를 내부에 있는 컨버터를 사용해서 변환하고, 레디스 관련 작업을 마무리한다.
-5.  `RedisKeyExpiredEvent` 이벤트 객체를 변환한 값을 통해 생성한다.
-6.  생성한 `RedisKeyExpiredEvent` 이벤트를 트리거한다.
-7.  `RedisKeyExpiredEvent` 이벤트 리스너들이 이를 처리한다.
+1. `ApplicationEventPublisher` (실 객체는 `ApplicationContext` 구현체) 를 주입받는다.
+2. Keyspace notification 메시지 (Key Expire) 를 전달받는다.
+3. `RedisKeyValueAdapter` 내부에 있는 정적 클래스인 `MappingExpirationListener` 클래스에게 Key Expire 이벤트 처리를 위임한다.
+4. `MappingExpirationListener` 클래스는 전달받은 메시지 객체를 내부에 있는 컨버터를 사용해서 변환하고, 레디스 관련 작업을 마무리한다.
+5. `RedisKeyExpiredEvent` 이벤트 객체를 변환한 값을 통해 생성한다.
+6. 생성한 `RedisKeyExpiredEvent` 이벤트를 트리거한다.
+7. `RedisKeyExpiredEvent` 이벤트 리스너들이 이를 처리한다.
 
 ## 어떻게 `RedisKeyExpiredEvent` 를 사용하는가?
 
@@ -643,9 +645,9 @@ static class MappingExpirationListener extends KeyExpirationEventMessageListener
 
 대략 다음과 같은 일들을 하고 있음을 알 수 있다.
 
--   Redis에서 `__keyevent@*__:expired` 메시지를 수신한다.
--   메시지를 `RedisKeyExpiredEvent` 로 변환하고, 발행한다.
--   불필요한 `PhantomKey` 를 삭제한다.
+- Redis에서 `__keyevent@*__:expired` 메시지를 수신한다.
+- 메시지를 `RedisKeyExpiredEvent` 로 변환하고, 발행한다.
+- 불필요한 `PhantomKey` 를 삭제한다.
 
 이와 유사한 방식으로 `KeyExpirationEventMessageListener` 를 상속받아 구현한 후에, `RedisMessageListenerContainer` 를 주입받아서 사용하면 된다.[^6]
 
@@ -997,10 +999,17 @@ public class RedisExpiredTest {
 ## Reference
 
 [^1]: [https://redis.io/docs/manual/keyspace-notifications](https://redis.io/docs/manual/keyspace-notifications)
+
 [^2]: [https://github.com/spring-projects/spring-data-redis/blob/main/src/main/java/org/springframework/data/redis/repository/configuration/EnableRedisRepositories.java#L56](https://github.com/spring-projects/spring-data-redis/blob/main/src/main/java/org/springframework/data/redis/repository/configuration/EnableRedisRepositories.java#L56)
+
 [^3]: [https://engineering.salesforce.com/lessons-learned-using-spring-data-redis-f3121f89bff9](https://engineering.salesforce.com/lessons-learned-using-spring-data-redis-f3121f89bff9)
+
 [^4]: [https://hyperconnect.github.io/2022/12/12/fix-increasing-memory-usage.html](https://hyperconnect.github.io/2022/12/12/fix-increasing-memory-usage.html)
+
 [^5]: [https://github.com/spring-projects/spring-data-redis/blob/a7d39147cf3f9649b0609a10fc43e5672c732193/src/main/java/org/springframework/data/redis/core/RedisKeyValueAdapter.java#L722-L725](https://github.com/spring-projects/spring-data-redis/blob/main/src/main/java/org/springframework/data/redis/core/RedisKeyValueAdapter.java#L722-L725)
+
 [^6]: [https://github.com/spring-projects/spring-data-redis/blob/a7d39147cf3f9649b0609a10fc43e5672c732193/src/main/java/org/springframework/data/redis/listener/KeyExpirationEventMessageListener.java#L44-L46](https://github.com/spring-projects/spring-data-redis/blob/a7d39147cf3f9649b0609a10fc43e5672c732193/src/main/java/org/springframework/data/redis/listener/KeyExpirationEventMessageListener.java#L44-L46)
+
 [^7]: [https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis.repositories.expirations](https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis.repositories.expirations)
+
 [^8]: [https://stackoverflow.com/questions/57046175/startup-error-using-spring-boot-starter-data-redis-on-aws-using-ssl](https://stackoverflow.com/questions/57046175/startup-error-using-spring-boot-starter-data-redis-on-aws-using-ssl) 
