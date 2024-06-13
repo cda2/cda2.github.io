@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>만났던 개발 서적 | cda2</title>
+<meta name="generator" content="Jekyll v3.9.5">
+<meta property="og:title" content="만났던 개발 서적">
+<meta name="author" content="cda2">
+<meta property="og:locale" content="ko">
+<meta name="description" content="설계">
+<meta property="og:description" content="설계">
+<link rel="canonical" href="https://cda2.github.io/history/book/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EC%84%9C%EC%A0%81.html">
+<meta property="og:url" content="https://cda2.github.io/history/book/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EC%84%9C%EC%A0%81.html">
+<meta property="og:site_name" content="cda2">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2024-04-22T18:51:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="만났던 개발 서적">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"cda2"},"dateModified":"2024-04-22T18:51:00+00:00","datePublished":"2024-04-22T18:51:00+00:00","description":"설계","headline":"만났던 개발 서적","mainEntityOfPage":{"@type":"WebPage","@id":"https://cda2.github.io/history/book/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EC%84%9C%EC%A0%81.html"},"url":"https://cda2.github.io/history/book/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EC%84%9C%EC%A0%81.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="https://cda2.github.io/feed.xml" title="cda2">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: capitalize;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <link rel="stylesheet" href="/assets/css/custom.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="cda2" src="" onerror="this.style.display='none'">
+  cda2
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/articles.html">ARTICLES</a><a class="page-link" href="/categories.html">CATEGORIES</a>
+
+
+
+
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">만났던 개발 서적</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2024-04-22T18:51:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> 2024-04-22
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 3 mins</span>
+  </p></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <h2 id="설계">설계</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001033116">가상 면접 사례로 배우는 대규모 시스템 설계 기초</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000211656186">가상 면접 사례로 배우는 대규모 시스템 설계 기초 2</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001766328">데이터 중심 애플리케이션 설계</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810379">이벤트 기반 마이크로서비스 구축</a></li>
+</ul>
+
+<h2 id="패턴">패턴</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810483">헤드 퍼스트 디자인 패턴</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001952246">함수형 코딩</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001834349">마이크로 서비스 패턴</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810495">도메인 주도 개발 시작하기: DDD 핵심 개념 정리부터 구현까지</a></li>
+</ul>
+
+<h2 id="소프트웨어-품질">소프트웨어 품질</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001032980">클린 코드</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001033082">클린 아키텍처: 소프트웨어 구조와 설계의 원칙</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000061353995">좋은 코드, 나쁜 코드</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000208791976">스트리트 코더</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001952236">프로그래머의 뇌</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001766290">Code Complete 코드 컴플리트 - 2판</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001766367">오브젝트</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000212999739">켄트 벡의 Tidy First?: 더 나은 소프트웨어 설계를 위한 32가지 코드 정리법</a></li>
+</ul>
+
+<h2 id="언어별">언어별</h2>
+
+<h3 id="python">Python</h3>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810383">고성능 파이썬 - 2판</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001057838">전문가를 위한 파이썬 - Fluent Python</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000061550477">전문가를 위한 파이썬 프로그래밍 - 제4판 - Expert Python Programming</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001834494">파이썬 코딩의 기술 - Effective Python 2ND</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810393">파이썬으로 살펴보는 아키텍처 패턴: TDD, DDD, EDM 적용하기</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000201558138">파이썬 라이브러리를 활용한 데이터 분석</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810381">파이썬 비동기 라이브러리 AsyncIO</a></li>
+</ul>
+
+<h3 id="jvm">JVM</h3>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000213057051">JVM 밑바닥까지 파헤치기</a></li>
+</ul>
+
+<h4 id="spring">Spring</h4>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000000935360">토비의 스프링 3.1</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001932754">스프링 부트 실전 활용 마스터</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810077">스프링5 레시피</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001766309">스프링 철저 입문</a></li>
+</ul>
+
+<h4 id="java">Java</h4>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001033066">이펙티브 자바 - 3판</a></li>
+</ul>
+
+<h4 id="kotlin">Kotlin</h4>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001033129">이펙티브 코틀린</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000210537188">코틀린 코루틴</a></li>
+</ul>
+
+<h3 id="typescript">Typescript</h3>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001033114">이펙티브 타입스크립트</a></li>
+</ul>
+
+<h2 id="데이터-파이프라인">데이터 파이프라인</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000201435653">데이터 품질의 비밀</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001810100">스파크 완벽 가이드</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001952239">Apache Airflow 기반의 데이터 파이프라인</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001932755">엘라스틱 스택 개발부터 운영까지</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001973303">카프카, 데이터 플랫폼의 최강자</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001932756">실전 카프카 개발부터 운영까지</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000200716128">실시간 데이터 파이프라인 아키텍처</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001842177">아파치 카프카 애플리케이션 프로그래밍 with 자바</a></li>
+</ul>
+
+<h2 id="컨테이너">컨테이너</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000208711643">쿠버네티스 교과서</a></li>
+</ul>
+
+<h2 id="테스트">테스트</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000201055864">이펙티브 소프트웨어 테스팅</a></li>
+</ul>
+
+<h2 id="데이터베이스">데이터베이스</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000060313997">Real MySQL 8.0 세트</a></li>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001766322">대용량 데이터 처리를 위한 Real MongoDB</a></li>
+</ul>
+
+<h2 id="협업">협업</h2>
+
+<ul>
+  <li><a href="https://product.kyobobook.co.kr/detail/S000001033071">함께 자라기</a></li>
+</ul>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/scrapy/2024/02/01/Scrapy-Feed-Exports.html" title="Scrapy Feed Exports">Scrapy Feed Exports</a><a class="next" href="/history/reference/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4.html" title="만났던 개발 레퍼런스">만났던 개발 레퍼런스</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/linux/kime/2023/03/14/Kime.html" title="만났던 개발 레퍼런스">Kime</a></li>
+<li><a class="post-link" href="/scrapy/2024/06/12/Scrapy%EB%8A%94-%EC%A2%85%EB%A3%8C-%EC%8B%9C%EC%A0%90%EC%97%90-Item%EC%9D%84-Yield-%ED%95%A0-%EC%88%98-%EC%97%86%EB%8A%94%EA%B0%80.html" title="만났던 개발 레퍼런스">Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가</a></li>
+<li><a class="post-link" href="/scrapy/2024/02/01/Scrapy-Feed-Exports.html" title="만났던 개발 레퍼런스">Scrapy Feed Exports</a></li>
+<li><a class="post-link" href="/history/book/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EC%84%9C%EC%A0%81.html" title="만났던 개발 레퍼런스">만났던 개발 서적</a></li>
+</ul>
+    </div>
+<div class="post-comments">
+<div id="utterances-placeholder"></div>
+<script>
+  const utterancesThemeFromDataTheme = () => {
+    const dataTheme = document.documentElement.getAttribute('data-theme');
+    return `github-${dataTheme}`;
+  };
+
+  const setUtterancesTheme = () => {
+    const iframe = document.querySelector('.utterances-frame');
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: utterancesThemeFromDataTheme()
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es');
+    }
+  }
+
+  // dynamic change
+  const observer = new MutationObserver((mutationsList, observer) => {
+    for (let mutation of mutationsList) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+        setUtterancesTheme();
+      }
+    }
+  });
+  observer.observe(document.documentElement, { attributes: true, childList: false, subtree: false });
+
+  let utterancesScript = document.createElement('script');
+  utterancesScript.async = true;
+  utterancesScript.src = 'https://utteranc.es/client.js';
+  utterancesScript.crossOrigin = 'anonymous';
+  utterancesScript.setAttribute('issue-term', 'title');
+  utterancesScript.setAttribute('label', 'utterances comment');
+  utterancesScript.setAttribute('repo', 'cda2/blog_comments');
+  utterancesScript.setAttribute('theme', utterancesThemeFromDataTheme());
+
+  const placeholder = document.getElementById('utterances-placeholder');
+  placeholder.parentNode.replaceChild(utterancesScript, placeholder);
+</script>
+</div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>Copyright © 2024 <a href="https://github.com/cda2">cda2</a>
+</div>
+      <div>Powered by <a title="Jekyll is a simple, blog-aware, static site
+      generator." href="https://jekyllrb.com/">Jekyll</a> &amp; <a title="Yat, yet
+      another theme." href="https://github.com/jeffreytse/jekyll-theme-yat">Yat Theme</a>.</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

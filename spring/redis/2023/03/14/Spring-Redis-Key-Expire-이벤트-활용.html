@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Spring Redis Key Expire 이벤트 활용 | cda2</title>
+<meta name="generator" content="Jekyll v3.9.5">
+<meta property="og:title" content="Spring Redis Key Expire 이벤트 활용">
+<meta name="author" content="cda2">
+<meta property="og:locale" content="ko">
+<meta name="description" content="스프링에서는 Redis의 Key Expire (Keyspace) 이벤트를 활용할 수 있다. 내부 구현을 통해 이벤트를 발생시키는 방법을 알아보자.">
+<meta property="og:description" content="스프링에서는 Redis의 Key Expire (Keyspace) 이벤트를 활용할 수 있다. 내부 구현을 통해 이벤트를 발생시키는 방법을 알아보자.">
+<link rel="canonical" href="https://cda2.github.io/spring/redis/2023/03/14/Spring-Redis-Key-Expire-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%ED%99%9C%EC%9A%A9.html">
+<meta property="og:url" content="https://cda2.github.io/spring/redis/2023/03/14/Spring-Redis-Key-Expire-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%ED%99%9C%EC%9A%A9.html">
+<meta property="og:site_name" content="cda2">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-03-14T18:04:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Spring Redis Key Expire 이벤트 활용">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"cda2"},"dateModified":"2023-03-14T18:04:00+00:00","datePublished":"2023-03-14T18:04:00+00:00","description":"스프링에서는 Redis의 Key Expire (Keyspace) 이벤트를 활용할 수 있다. 내부 구현을 통해 이벤트를 발생시키는 방법을 알아보자.","headline":"Spring Redis Key Expire 이벤트 활용","mainEntityOfPage":{"@type":"WebPage","@id":"https://cda2.github.io/spring/redis/2023/03/14/Spring-Redis-Key-Expire-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%ED%99%9C%EC%9A%A9.html"},"url":"https://cda2.github.io/spring/redis/2023/03/14/Spring-Redis-Key-Expire-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%ED%99%9C%EC%9A%A9.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="https://cda2.github.io/feed.xml" title="cda2">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: capitalize;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <link rel="stylesheet" href="/assets/css/custom.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="cda2" src="" onerror="this.style.display='none'">
+  cda2
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/articles.html">ARTICLES</a><a class="page-link" href="/categories.html">CATEGORIES</a>
+
+
+
+
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Spring Redis Key Expire 이벤트 활용</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2023-03-14T18:04:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> 2023-03-14
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 1 hour 52 mins</span>
+  </p></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>스프링에서는 Redis의 Key Expire (Keyspace) 이벤트를 활용할 수 있다. 내부 구현을 통해 이벤트를 발생시키는 방법을 알아보자.</p>
+
+<h2 id="key-expire-이벤트-발생">Key Expire 이벤트 발생</h2>
+
+<p>Redis 공식 문서<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote" rel="footnote">1</a></sup> 에 따르면, Expire 이벤트를 수신하기 위해서는 최소한 다음과 같은 플래그 사용이 필요하다.</p>
+
+<ul>
+  <li>E (<strong>keyevent@</strong> 접두사로 발행된 Keyevent 이벤트.)</li>
+  <li>x (Key가 만료되었을 때 발생하는 이벤트.)</li>
+</ul>
+
+<p>Redis에서 설정을 사용하기 위해서는 <code class="language-plaintext highlighter-rouge">redis.conf</code> 파일을 수정하거나, <code class="language-plaintext highlighter-rouge">redis-cli</code>를 통해 설정을 변경할 수 있다.<br>
+<code class="language-plaintext highlighter-rouge">redis.conf</code> 파일을 수정하는 경우, 다음과 같이 설정을 수정한다.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>notify-keyspace-events "Ex"
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">redis-cli</code>를 통해 설정을 변경하는 경우, 다음과 같이 설정을 변경한다.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>redis-cli CONFIG SET notify-keyspace-events <span class="s2">"Ex"</span>
+</code></pre></div></div>
+
+<h2 id="key-expire-이벤트-수신">Key Expire 이벤트 수신</h2>
+
+<p>Spring에서는 Redis의 Key Expire 이벤트를 수신하기 위해서는 다음과 같은 설정이 필요하다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nd">@EnableRedisRepositories</span><span class="o">(</span><span class="n">enableKeyspaceEvents</span> <span class="o">=</span> <span class="nc">EnableKeyspaceEvents</span><span class="o">.</span><span class="na">ON_STARTUP</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RedisConfig</span> <span class="o">{</span>
+    <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>대체 이 어노테이션이 어떤 기능을 하는지 알아보자.</p>
+
+<h2 id="enableredisrepositories-어노테이션의-작동-방식">
+<code class="language-plaintext highlighter-rouge">@EnableRedisRepositories</code> 어노테이션의 작동 방식</h2>
+
+<p><code class="language-plaintext highlighter-rouge">@EnableRedisRepositories</code> 어노테이션은 다음과 같이 정의되어 있다.<sup id="fnref:2" role="doc-noteref"><a href="#fn:2" class="footnote" rel="footnote">2</a></sup></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * Copyright 2015-2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */</span>
+<span class="kn">package</span> <span class="nn">org.springframework.data.redis.repository.configuration</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.lang.annotation.Documented</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.lang.annotation.ElementType</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.lang.annotation.Inherited</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.lang.annotation.Retention</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.lang.annotation.RetentionPolicy</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.lang.annotation.Target</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.beans.factory.FactoryBean</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.context.annotation.ComponentScan.Filter</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.context.annotation.Import</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.keyvalue.core.KeyValueOperations</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.keyvalue.repository.config.QueryCreatorType</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisKeyValueAdapter.EnableKeyspaceEvents</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisKeyValueAdapter.ShadowCopy</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisOperations</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.convert.KeyspaceConfiguration</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.index.IndexConfiguration</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.listener.KeyExpirationEventMessageListener</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.repository.query.RedisQueryCreator</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.repository.support.RedisRepositoryFactoryBean</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.repository.config.DefaultRepositoryBaseClass</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.repository.query.QueryLookupStrategy</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.repository.query.QueryLookupStrategy.Key</span><span class="o">;</span>
+
+<span class="cm">/**
+ * Annotation to activate Redis repositories. If no base package is configured through either {@link #value()},
+ * {@link #basePackages()} or {@link #basePackageClasses()} it will trigger scanning of the package of annotated class.
+ *
+ * @author Christoph Strobl
+ * @author Mark Paluch
+ * @since 1.7
+ */</span>
+<span class="nd">@Target</span><span class="o">(</span><span class="nc">ElementType</span><span class="o">.</span><span class="na">TYPE</span><span class="o">)</span>
+<span class="nd">@Retention</span><span class="o">(</span><span class="nc">RetentionPolicy</span><span class="o">.</span><span class="na">RUNTIME</span><span class="o">)</span>
+<span class="nd">@Documented</span>
+<span class="nd">@Inherited</span>
+<span class="nd">@Import</span><span class="o">(</span><span class="nc">RedisRepositoriesRegistrar</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="nd">@QueryCreatorType</span><span class="o">(</span><span class="nc">RedisQueryCreator</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="kd">public</span> <span class="nd">@interface</span> <span class="nc">EnableRedisRepositories</span> <span class="o">{</span>
+
+    <span class="cm">/**
+     * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation declarations e.g.:
+     * {@code @EnableRedisRepositories("org.my.pkg")} instead of
+     * {@code @EnableRedisRepositories(basePackages="org.my.pkg")}.
+     */</span>
+    <span class="nc">String</span><span class="o">[]</span> <span class="nf">value</span><span class="o">()</span> <span class="k">default</span> <span class="o">{};</span>
+
+    <span class="cm">/**
+     * Base packages to scan for annotated components. {@link #value()} is an alias for (and mutually exclusive with) this
+     * attribute. Use {@link #basePackageClasses()} for a type-safe alternative to String-based package names.
+     */</span>
+    <span class="nc">String</span><span class="o">[]</span> <span class="nf">basePackages</span><span class="o">()</span> <span class="k">default</span> <span class="o">{};</span>
+
+    <span class="cm">/**
+     * Type-safe alternative to {@link #basePackages()} for specifying the packages to scan for annotated components. The
+     * package of each class specified will be scanned. Consider creating a special no-op marker class or interface in
+     * each package that serves no purpose other than being referenced by this attribute.
+     */</span>
+    <span class="nc">Class</span><span class="o">&lt;?&gt;[]</span> <span class="n">basePackageClasses</span><span class="o">()</span> <span class="k">default</span> <span class="o">{};</span>
+
+    <span class="cm">/**
+     * Specifies which types are not eligible for component scanning.
+     */</span>
+    <span class="nc">Filter</span><span class="o">[]</span> <span class="nf">excludeFilters</span><span class="o">()</span> <span class="k">default</span> <span class="o">{};</span>
+
+    <span class="cm">/**
+     * Specifies which types are eligible for component scanning. Further narrows the set of candidate components from
+     * everything in {@link #basePackages()} to everything in the base packages that matches the given filter or filters.
+     */</span>
+    <span class="nc">Filter</span><span class="o">[]</span> <span class="nf">includeFilters</span><span class="o">()</span> <span class="k">default</span> <span class="o">{};</span>
+
+    <span class="cm">/**
+     * Returns the postfix to be used when looking up custom repository implementations. Defaults to {@literal Impl}. So
+     * for a repository named {@code PersonRepository} the corresponding implementation class will be looked up scanning
+     * for {@code PersonRepositoryImpl}.
+     *
+     * @return
+     */</span>
+    <span class="nc">String</span> <span class="nf">repositoryImplementationPostfix</span><span class="o">()</span> <span class="k">default</span> <span class="s">"Impl"</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configures the location of where to find the Spring Data named queries properties file.
+     *
+     * @return
+     */</span>
+    <span class="nc">String</span> <span class="nf">namedQueriesLocation</span><span class="o">()</span> <span class="k">default</span> <span class="s">""</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Returns the key of the {@link QueryLookupStrategy} to be used for lookup queries for query methods. Defaults to
+     * {@link Key#CREATE_IF_NOT_FOUND}.
+     *
+     * @return
+     */</span>
+    <span class="nc">Key</span> <span class="nf">queryLookupStrategy</span><span class="o">()</span> <span class="k">default</span> <span class="nc">Key</span><span class="o">.</span><span class="na">CREATE_IF_NOT_FOUND</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Returns the {@link FactoryBean} class to be used for each repository instance. Defaults to
+     * {@link RedisRepositoryFactoryBean}.
+     *
+     * @return
+     */</span>
+    <span class="nc">Class</span><span class="o">&lt;?&gt;</span> <span class="n">repositoryFactoryBeanClass</span><span class="o">()</span> <span class="k">default</span> <span class="nc">RedisRepositoryFactoryBean</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configure the repository base class to be used to create repository proxies for this particular configuration.
+     *
+     * @return
+     */</span>
+    <span class="nc">Class</span><span class="o">&lt;?&gt;</span> <span class="n">repositoryBaseClass</span><span class="o">()</span> <span class="k">default</span> <span class="nc">DefaultRepositoryBaseClass</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configures the name of the {@link KeyValueOperations} bean to be used with the repositories detected.
+     *
+     * @return
+     */</span>
+    <span class="nc">String</span> <span class="nf">keyValueTemplateRef</span><span class="o">()</span> <span class="k">default</span> <span class="s">"redisKeyValueTemplate"</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configures whether nested repository-interfaces (e.g. defined as inner classes) should be discovered by the
+     * repositories infrastructure.
+     */</span>
+    <span class="kt">boolean</span> <span class="nf">considerNestedRepositories</span><span class="o">()</span> <span class="k">default</span> <span class="kc">false</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configures the bean name of the {@link RedisOperations} to be used. Defaulted to {@literal redisTemplate}.
+     *
+     * @return
+     */</span>
+    <span class="nc">String</span> <span class="nf">redisTemplateRef</span><span class="o">()</span> <span class="k">default</span> <span class="s">"redisTemplate"</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Set up index patterns using simple configuration class.
+     *
+     * @return
+     */</span>
+    <span class="nc">Class</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="nc">IndexConfiguration</span><span class="o">&gt;</span> <span class="nf">indexConfiguration</span><span class="o">()</span> <span class="k">default</span> <span class="nc">IndexConfiguration</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Set up keyspaces for specific types.
+     *
+     * @return
+     */</span>
+    <span class="nc">Class</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="nc">KeyspaceConfiguration</span><span class="o">&gt;</span> <span class="nf">keyspaceConfiguration</span><span class="o">()</span> <span class="k">default</span> <span class="nc">KeyspaceConfiguration</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configure usage of {@link KeyExpirationEventMessageListener}.
+     *
+     * @return
+     * @since 1.8
+     */</span>
+    <span class="nc">EnableKeyspaceEvents</span> <span class="nf">enableKeyspaceEvents</span><span class="o">()</span> <span class="k">default</span> <span class="nc">EnableKeyspaceEvents</span><span class="o">.</span><span class="na">OFF</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configure the name of the {@link org.springframework.data.redis.listener.RedisMessageListenerContainer} bean to be
+     * used for keyspace event subscriptions. Defaults to use an anonymous managed instance by
+     * {@link org.springframework.data.redis.core.RedisKeyValueAdapter}.
+     *
+     * @return
+     * @since 2.7.2
+     */</span>
+    <span class="nc">String</span> <span class="nf">messageListenerContainerRef</span><span class="o">()</span> <span class="k">default</span> <span class="s">""</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configuration flag controlling storage of phantom keys (shadow copies) of expiring entities to read them later when
+     * publishing {@link org.springframework.data.redis.core.RedisKeyspaceEvent keyspace events}.
+     *
+     * @return
+     * @since 2.4
+     */</span>
+    <span class="nc">ShadowCopy</span> <span class="nf">shadowCopy</span><span class="o">()</span> <span class="k">default</span> <span class="nc">ShadowCopy</span><span class="o">.</span><span class="na">DEFAULT</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Configure the {@literal notify-keyspace-events} property if not already set. &lt;br /&gt;
+     * Use an empty {@link String} to keep (&lt;b&gt;not&lt;/b&gt; alter) existing server configuration.
+     *
+     * @return {@literal Ex} by default.
+     * @since 1.8
+     */</span>
+    <span class="nc">String</span> <span class="nf">keyspaceNotificationsConfigParameter</span><span class="o">()</span> <span class="k">default</span> <span class="s">"Ex"</span><span class="o">;</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>클래스와 메서드에 작성되어 있는 주석들을 잘 살펴보면 다음과 같은 중요한 부분들을 발견할 수 있다.</p>
+
+<h3 id="messagelistenercontainerref-설정">MessageListenerContainerRef 설정</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Configure the name of the {@link org.springframework.data.redis.listener.RedisMessageListenerContainer} bean to be
+ * used for keyspace event subscriptions. Defaults to use an anonymous managed instance by
+ * {@link org.springframework.data.redis.core.RedisKeyValueAdapter}.
+ *
+ * @return
+ * @since 2.7.2
+ */</span>
+<span class="nc">String</span> <span class="nf">messageListenerContainerRef</span><span class="o">()</span><span class="k">default</span> <span class="s">""</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">RedisMessageListenerContainer</code> 에 사용할 빈의 이름을 설정한다. 기본값은 <code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 에 의해 관리되는 객체를 사용한다.</p>
+
+<p><code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 에서는 다음과 같이 컨테이너 객체를 생성하고 있다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">initMessageListenerContainer</span><span class="o">(){</span> <span class="c1">// `MessageListenerContainer` 초기화</span>
+
+    <span class="k">this</span><span class="o">.</span><span class="na">messageListenerContainer</span><span class="o">=</span><span class="k">new</span> <span class="nc">RedisMessageListenerContainer</span><span class="o">();</span> <span class="c1">// `RedisMessageListenerContainer` 생성</span>
+    <span class="c1">// `RedisMessageListenerContainer` 에 ConnectionFactory 설정</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">messageListenerContainer</span><span class="o">.</span><span class="na">setConnectionFactory</span><span class="o">(((</span><span class="nc">RedisTemplate</span><span class="o">&lt;?,</span> <span class="o">?&gt;)</span><span class="n">redisOps</span><span class="o">).</span><span class="na">getConnectionFactory</span><span class="o">());</span>
+    <span class="c1">// 스레드풀, 비동기 처리 등 설정</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">messageListenerContainer</span><span class="o">.</span><span class="na">afterPropertiesSet</span><span class="o">();</span>
+    <span class="c1">// container 시작 처리</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">messageListenerContainer</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="keyspace-notification-설정">Keyspace Notification 설정</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Configure the {@literal notify-keyspace-events} property if not already set. &lt;br /&gt;
+ * Use an empty {@link String} to keep (&lt;b&gt;not&lt;/b&gt; alter) existing server configuration.
+ *
+ * @return {@literal Ex} by default.
+ * @since 1.8
+ */</span>
+
+<span class="c1">// `notify-keyspace-events` 가 설정되어 있지 않다면, `Ex` 로 설정한다. 빈 문자열을 사용하면 기존 설정을 유지한다.</span>
+<span class="nc">String</span> <span class="nf">keyspaceNotificationsConfigParameter</span><span class="o">()</span><span class="k">default</span> <span class="s">"Ex"</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>위의 Redis의 Keyspace Notification 설정에서 보았듯이, Key Expire 이벤트를 수신하기 위해서는 최소한 <code class="language-plaintext highlighter-rouge">Ex</code> 옵션을 설정해야 한다. 이러한 동작을 <code class="language-plaintext highlighter-rouge">@EnableRedisRepositories</code> 어노테이션을 사용하는 것 만으로 수행할 수 있다.</p>
+
+<p>이 옵션 문자열은 <code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 에서 사용된다.</p>
+
+<h3 id="enablekeyspaceevents-설정">EnableKeyspaceEvents 설정</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Configure usage of {@link KeyExpirationEventMessageListener}.
+ *
+ * @return
+ * @since 1.8
+ */</span>
+<span class="nc">EnableKeyspaceEvents</span> <span class="nf">enableKeyspaceEvents</span><span class="o">()</span><span class="k">default</span> <span class="nc">EnableKeyspaceEvents</span><span class="o">.</span><span class="na">OFF</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>주석을 살펴보면, <code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 를 사용할 것인지를 설정하는 부분이다. <code class="language-plaintext highlighter-rouge">EnableKeyspaceEvents</code> 는 다음과 같은 Enum 타입이다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="nc">EnableKeyspaceEvents</span> <span class="o">{</span>
+
+    <span class="cm">/**
+     * Initializes the {@link KeyExpirationEventMessageListener} on startup.
+     */</span>
+    <span class="c1">// 애플리케이션 시작 시에 KeyExpirationEventMessageListener를 초기화한다.</span>
+    <span class="no">ON_STARTUP</span><span class="o">,</span>
+
+    <span class="cm">/**
+     * Initializes the {@link KeyExpirationEventMessageListener} on first insert having expiration time set.
+     */</span>
+    <span class="c1">// 첫번째 expire 시간이 설정된 데이터가 insert 될 때 KeyExpirationEventMessageListener를 초기화한다.</span>
+    <span class="no">ON_DEMAND</span><span class="o">,</span>
+
+    <span class="cm">/**
+     * Turn {@link KeyExpirationEventMessageListener} usage off. No expiration events will be received.
+     */</span>
+    <span class="c1">// 사용하지 않는다.</span>
+    <span class="no">OFF</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 속성은 실제로 <code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 에서 다음과 같이 설정된다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">initKeyExpirationListener</span><span class="o">(){</span>
+
+    <span class="c1">// Expire 이벤트 리스너가 없는 경우</span>
+    <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">expirationListener</span><span class="o">.</span><span class="na">get</span><span class="o">()==</span><span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 기본적인 Expire 이벤트를 처리하는 매핑 리스너 클래스를 생성한다.</span>
+        <span class="nc">MappingExpirationListener</span> <span class="n">listener</span><span class="o">=</span><span class="k">new</span> <span class="nc">MappingExpirationListener</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">messageListenerContainer</span><span class="o">,</span><span class="k">this</span><span class="o">.</span><span class="na">redisOps</span><span class="o">,</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">converter</span><span class="o">);</span>
+        <span class="c1">// Expire 설정 파라미터 값을 설정한다. (이전에 본 기본값인 "Ex" 또는 별도의 설정 값)</span>
+        <span class="n">listener</span><span class="o">.</span><span class="na">setKeyspaceNotificationsConfigParameter</span><span class="o">(</span><span class="n">keyspaceNotificationsConfigParameter</span><span class="o">);</span>
+
+        <span class="c1">// 애플리케이션 이벤트 발행자가 설정되어 있는 경우, 매핑 리스너에 설정한다.</span>
+        <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">eventPublisher</span><span class="o">!=</span><span class="kc">null</span><span class="o">){</span>
+        <span class="n">listener</span><span class="o">.</span><span class="na">setApplicationEventPublisher</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">eventPublisher</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="c1">// Expire 이벤트 리스너가 설정되어 있지 않은 경우, 매핑 리스너를 초기화 하고 설정한다.</span>
+        <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">expirationListener</span><span class="o">.</span><span class="na">compareAndSet</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span><span class="n">listener</span><span class="o">)){</span>
+            <span class="n">listener</span><span class="o">.</span><span class="na">init</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>이 함수를 <code class="language-plaintext highlighter-rouge">ON_STARTUP</code> 으로 설정하면, 애플리케이션 시작 시에 <code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 가 초기화 되고, <code class="language-plaintext highlighter-rouge">ON_DEMAND</code> 로 설정하면, 첫번째 expire 시간이 설정된 데이터가 insert 될 때 <code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 가 초기화 된다.</p>
+
+<h3 id="shadowcopy-설정">ShadowCopy 설정</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Configuration flag controlling storage of phantom keys (shadow copies) of expiring entities to read them later when
+ * publishing {@link org.springframework.data.redis.core.RedisKeyspaceEvent keyspace events}.
+ *
+ * @return
+ * @since 2.4
+ */</span>
+<span class="nc">ShadowCopy</span> <span class="nf">shadowCopy</span><span class="o">()</span><span class="k">default</span> <span class="nc">ShadowCopy</span><span class="o">.</span><span class="na">DEFAULT</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">ShadowCopy</code> 는 다음과 같은 Enum 타입이다. 기본적으로 <code class="language-plaintext highlighter-rouge">DEFAULT</code> 로 설정되어 있다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Configuration flag controlling storage of phantom keys (shadow copies) of expiring entities to read them later when
+ * publishing {@link RedisKeyspaceEvent}.
+ *
+ * @author Christoph Strobl
+ * @since 2.4
+ */</span>
+<span class="kd">public</span> <span class="kd">enum</span> <span class="nc">ShadowCopy</span> <span class="o">{</span>
+
+    <span class="cm">/**
+     * Store shadow copies of expiring entities depending on the {@link EnableKeyspaceEvents}.
+     */</span>
+    <span class="no">DEFAULT</span><span class="o">,</span>
+
+    <span class="cm">/**
+     * Store shadow copies of expiring entities.
+     */</span>
+    <span class="no">ON</span><span class="o">,</span>
+
+    <span class="cm">/**
+     * Do not store shadow copies.
+     */</span>
+    <span class="no">OFF</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">ShadowCopy</code> 가 설정되어 있으면 <code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 에서 다음과 같이 처리된다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">keepShadowCopy</span><span class="o">(){</span>
+
+    <span class="k">switch</span><span class="o">(</span><span class="n">shadowCopy</span><span class="o">){</span>
+        <span class="k">case</span> <span class="nl">OFF:</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="k">case</span> <span class="nl">ON:</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="k">default</span><span class="o">:</span>
+            <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">expirationListener</span><span class="o">.</span><span class="na">get</span><span class="o">()!=</span><span class="kc">null</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>위의 함수는 <code class="language-plaintext highlighter-rouge">ShadowCopy</code> 가 <code class="language-plaintext highlighter-rouge">ON</code> 이거나 (<code class="language-plaintext highlighter-rouge">DEFAULT</code> 이고 Expire 이벤트 리스너가 있는 경우) <code class="language-plaintext highlighter-rouge">true</code>, 그렇지 않으면 <code class="language-plaintext highlighter-rouge">false</code> 를 반환한다.</p>
+
+<ul>
+  <li>put: <code class="language-plaintext highlighter-rouge">keepShadowCopy</code> 가 <code class="language-plaintext highlighter-rouge">true</code> 인 경우, <code class="language-plaintext highlighter-rouge">:phantom</code> 접미사를 가진 키를 생성한다.</li>
+  <li>delete: <code class="language-plaintext highlighter-rouge">keepShadowCopy</code> 가 <code class="language-plaintext highlighter-rouge">true</code> 인 경우, <code class="language-plaintext highlighter-rouge">:phantom</code> 접미사를 가진 키를 삭제한다.</li>
+  <li>update: <code class="language-plaintext highlighter-rouge">keepShadowCopy</code> 가 <code class="language-plaintext highlighter-rouge">true</code> 인 경우, <code class="language-plaintext highlighter-rouge">TTL</code> 시간이 초과된 경우 <code class="language-plaintext highlighter-rouge">:phantom</code> 접미사를 가진 키를 삭제한다. <code class="language-plaintext highlighter-rouge">TTL</code> 시간이 초과되지 않은 경우, <code class="language-plaintext highlighter-rouge">:phantom</code> 접미사를 가진 키의 값과 <code class="language-plaintext highlighter-rouge">TTL</code> 시간을 업데이트한다.</li>
+</ul>
+
+<p>이 옵션이 켜져 있어야 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 를 <code class="language-plaintext highlighter-rouge">value</code> 값과 같이 사용할 수 있다. 하지만 문제점으로 <code class="language-plaintext highlighter-rouge">ShadowCopy</code> 가 켜져 있으면, <code class="language-plaintext highlighter-rouge">:phantom</code> 이라는 접미사를 가진 키가 생성되어 메모리 사용량이 증가한다. <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 를 사용하지 않는다면, <code class="language-plaintext highlighter-rouge">ShadowCopy</code> 를 <code class="language-plaintext highlighter-rouge">OFF</code> 로 설정해야 메모리 사용량을 줄일 수 있다.<sup id="fnref:3" role="doc-noteref"><a href="#fn:3" class="footnote" rel="footnote">3</a></sup>, <sup id="fnref:4" role="doc-noteref"><a href="#fn:4" class="footnote" rel="footnote">4</a></sup></p>
+
+<p><code class="language-plaintext highlighter-rouge">ShadowCopy</code> 옵션을 사용 시 다음과 같이, <code class="language-plaintext highlighter-rouge">:phantom</code> 이라는 접미사를 가진 키가 생성되는 것을 확인할 수 있다. *
+*<code class="language-plaintext highlighter-rouge">phantom</code> 키 값은 원본 키 값보다 5분 (300초) 더 유지된다.**</p>
+
+<p><img src="/img/redis_phantom.png" alt="Redis Phantom"></p>
+
+<h2 id="왜-rediskeyexpiredevent-이벤트를-사용하는가">왜 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 이벤트를 사용하는가?</h2>
+
+<p>여러가지 이유가 있겠지만, 가장 중요한 것은 **개발자의 고통을 크게 줄여줄 수 있기 때문이라고 생각한다
+**. 다른 문서나 개발 예시들을 보면 비교적 로우 레벨인 <code class="language-plaintext highlighter-rouge">redisTemplate</code> 를 사용하는 것을 쉽게 볼 수 있는데, <code class="language-plaintext highlighter-rouge">redisTemplate</code>를 사용하기 위해서는 다음과 같은 요구사항들과 과정을 거쳐야한다.</p>
+
+<ul>
+  <li>모든 사소한 데이터의 CRUD 작업을 직접 구현해야 한다.</li>
+  <li>모든 <code class="language-plaintext highlighter-rouge">TTL</code> 값을 직접 실행해야 한다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">TTL</code> 값이 초과된 데이터를 직접 관리해야 한다.
+    <ul>
+      <li>이 때, <code class="language-plaintext highlighter-rouge">TTL</code> 값이 초과된 데이터를 찾기 위해서 반복적으로 조회하거나, 최소한의 모니터링이 필요하다.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>이 부분 중 하나라도 실수가 나거나 누락되면, 데이터가 정상적으로 삭제되지 않고 남아있는 문제가 발생할 수 있다.<br>
+이러한 실수를 줄이거나 방지할 수는 있겠지만, 개발자가 실수를 하지 않는다는 것은 불가능하다.</p>
+
+<h2 id="어떻게-rediskeyexpiredevent-가-발행되는가">어떻게 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 가 발행되는가?</h2>
+
+<p>이를 이해하기 위해서는 <code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 의 내부 구현을 살펴보면 된다.</p>
+
+<p>이에 앞서 다시 <code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 의 코드 일부분<sup id="fnref:5" role="doc-noteref"><a href="#fn:5" class="footnote" rel="footnote">5</a></sup>을 살펴보면 다음과 같다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">setApplicationContext</span><span class="o">(</span><span class="nc">ApplicationContext</span> <span class="n">applicationContext</span><span class="o">)</span><span class="kd">throws</span> <span class="nc">BeansException</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">eventPublisher</span> <span class="o">=</span> <span class="n">applicationContext</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>내내 돌고 돌아서, 결국엔 ApplicationContext에서 발행하는 이벤트를 사용하게 된다. 코드를 보면 <code class="language-plaintext highlighter-rouge">ApplicationContext</code> 를 받아서 <code class="language-plaintext highlighter-rouge">eventPublisher</code> 변수에 저장하는 것을 볼 수 있다. 이를 사용하여 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 를 발행한다. 직접적으로 발행하는 것은 아니고, <code class="language-plaintext highlighter-rouge">ApplicationContext</code> (정확히는 <code class="language-plaintext highlighter-rouge">ApplicationContext</code> 가 상속하고 있는 <code class="language-plaintext highlighter-rouge">ApplicationEventPublisher</code> 인터페이스) 를 각 이벤트 리스너들에게 넘겨주고, 각 리스너들이 트리거를 당기는 식으로 구현되어 있다.</p>
+
+<p>내부 동작들을 살펴보았으니, 이젠 Key Expire 메시지를 받아 처리하는 리스너를 들여다보자.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * Copyright 2015-2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */</span>
+<span class="kn">package</span> <span class="nn">org.springframework.data.redis.listener</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.context.ApplicationEventPublisher</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.context.ApplicationEventPublisherAware</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.connection.Message</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.connection.MessageListener</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisKeyExpiredEvent</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.lang.Nullable</span><span class="o">;</span>
+
+<span class="cm">/**
+ * {@link MessageListener} publishing {@link RedisKeyExpiredEvent}s via {@link ApplicationEventPublisher} by listening
+ * to Redis keyspace notifications for key expirations.
+ *
+ * @author Christoph Strobl
+ * @since 1.7
+ */</span>
+<span class="c1">// `ApplicationEventPublisher` 를 통해서 `RedisKeyExpiredEvent` 를 발행하는 `MessageListener` 구현체</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">KeyExpirationEventMessageListener</span> <span class="kd">extends</span> <span class="nc">KeyspaceEventMessageListener</span> <span class="kd">implements</span>
+    <span class="nc">ApplicationEventPublisherAware</span> <span class="o">{</span>
+
+    <span class="c1">// `__keyevent@*__:expired` 메시지를 수신하는 `Topic`</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">Topic</span> <span class="no">KEYEVENT_EXPIRED_TOPIC</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">PatternTopic</span><span class="o">(</span><span class="s">"__keyevent@*__:expired"</span><span class="o">);</span>
+
+    <span class="c1">// `ApplicationEventPublisher` 를 통해서 `RedisKeyExpiredEvent` 를 발행한다. `ApplicationEventPublisher` 는 `ApplicationContext`이다.</span>
+    <span class="kd">private</span> <span class="nd">@Nullable</span> <span class="nc">ApplicationEventPublisher</span> <span class="n">publisher</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Creates new {@link MessageListener} for {@code __keyevent@*__:expired} messages.
+     *
+     * @param listenerContainer must not be {@literal null}.
+     */</span>
+    <span class="c1">// `KEYEVENT_EXPIRED_TOPIC` 을 구독하는 `MessageListener` 를 생성한다.</span>
+    <span class="kd">public</span> <span class="nf">KeyExpirationEventMessageListener</span><span class="o">(</span><span class="nc">RedisMessageListenerContainer</span> <span class="n">listenerContainer</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">listenerContainer</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">// `KEYEVENT_EXPIRED_TOPIC` 을 구독한다.</span>
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doRegister</span><span class="o">(</span><span class="nc">RedisMessageListenerContainer</span> <span class="n">listenerContainer</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">listenerContainer</span><span class="o">.</span><span class="na">addMessageListener</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="no">KEYEVENT_EXPIRED_TOPIC</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">// 메시지 수신 시, 메시지의 바디를 `RedisKeyExpiredEvent` 로 변환하여 `ApplicationEventPublisher` 를 통해 발행한다.</span>
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doHandleMessage</span><span class="o">(</span><span class="nc">Message</span> <span class="n">message</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">publishEvent</span><span class="o">(</span><span class="k">new</span> <span class="nc">RedisKeyExpiredEvent</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">getBody</span><span class="o">()));</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**
+     * Publish the event in case an {@link ApplicationEventPublisher} is set.
+     *
+     * @param event can be {@literal null}.
+     */</span>
+    <span class="c1">// `ApplicationEventPublisher` 를 통해 `RedisKeyExpiredEvent` 를 발행한다.</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">publishEvent</span><span class="o">(</span><span class="nc">RedisKeyExpiredEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">publisher</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">publisher</span><span class="o">.</span><span class="na">publishEvent</span><span class="o">(</span><span class="n">event</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="c1">// `ApplicationEventPublisher` 를 주입 받는다.</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setApplicationEventPublisher</span><span class="o">(</span><span class="nc">ApplicationEventPublisher</span> <span class="n">applicationEventPublisher</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">publisher</span> <span class="o">=</span> <span class="n">applicationEventPublisher</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>코드를 보면 알 수 있듯이, 이전에 말한 다음 과정을 통해 이벤트가 발행된다.</p>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">ApplicationEventPublisher</code> (실 객체는 <code class="language-plaintext highlighter-rouge">ApplicationContext</code> 구현체) 를 주입받는다.</li>
+  <li>Keyspace notification 메시지 (Key Expire) 를 전달받는다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 내부에 있는 정적 클래스인 <code class="language-plaintext highlighter-rouge">MappingExpirationListener</code> 클래스에게 Key Expire 이벤트 처리를 위임한다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">MappingExpirationListener</code> 클래스는 전달받은 메시지 객체를 내부에 있는 컨버터를 사용해서 변환하고, 레디스 관련 작업을 마무리한다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 이벤트 객체를 변환한 값을 통해 생성한다.</li>
+  <li>생성한 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 이벤트를 트리거한다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 이벤트 리스너들이 이를 처리한다.</li>
+</ol>
+
+<h2 id="어떻게-rediskeyexpiredevent-를-사용하는가">어떻게 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 를 사용하는가?</h2>
+
+<p><code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 를 사용하는 방법은 크게 두 가지로 나눌 수 있다. 다른 방법이 더 있겠지만, 너무 복잡해서 굳이 다루지는 않는다.</p>
+
+<h3 id="keyexpirationeventmessagelistener-를-직접-상속-구현">
+<code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 를 직접 상속, 구현</h3>
+
+<p><code class="language-plaintext highlighter-rouge">RedisKeyValueAdapter</code> 의 내부에서 사용되는 <code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 를 구현하는 리스너의 예시 코드를 보자.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="kd">class</span> <span class="nc">MappingExpirationListener</span> <span class="kd">extends</span> <span class="nc">KeyExpirationEventMessageListener</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">RedisOperations</span><span class="o">&lt;?,</span> <span class="o">?&gt;</span> <span class="n">ops</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">RedisConverter</span> <span class="n">converter</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Creates new {@link MappingExpirationListener}.
+     *
+     * @param listenerContainer
+     * @param ops
+     * @param converter
+     */</span>
+    <span class="nc">MappingExpirationListener</span><span class="o">(</span>
+        <span class="nc">RedisMessageListenerContainer</span> <span class="n">listenerContainer</span><span class="o">,</span> <span class="nc">RedisOperations</span><span class="o">&lt;?,</span> <span class="o">?&gt;</span> <span class="n">ops</span><span class="o">,</span>
+        <span class="nc">RedisConverter</span> <span class="n">converter</span>
+    <span class="o">)</span> <span class="o">{</span>
+
+        <span class="kd">super</span><span class="o">(</span><span class="n">listenerContainer</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">ops</span> <span class="o">=</span> <span class="n">ops</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">converter</span> <span class="o">=</span> <span class="n">converter</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onMessage</span><span class="o">(</span><span class="nc">Message</span> <span class="n">message</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">pattern</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="k">if</span> <span class="o">(!</span><span class="n">isKeyExpirationMessage</span><span class="o">(</span><span class="n">message</span><span class="o">))</span> <span class="o">{</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">key</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="na">getBody</span><span class="o">();</span>
+
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">phantomKey</span> <span class="o">=</span> <span class="nc">ByteUtils</span><span class="o">.</span><span class="na">concat</span><span class="o">(</span>
+            <span class="n">key</span><span class="o">,</span>
+            <span class="n">converter</span><span class="o">.</span><span class="na">getConversionService</span><span class="o">().</span><span class="na">convert</span><span class="o">(</span><span class="nc">KeyspaceIdentifier</span><span class="o">.</span><span class="na">PHANTOM_SUFFIX</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[].</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">);</span>
+
+        <span class="nc">Map</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[],</span> <span class="kt">byte</span><span class="o">[]&gt;</span> <span class="n">hash</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="na">execute</span><span class="o">((</span><span class="nc">RedisCallback</span><span class="o">&lt;</span><span class="nc">Map</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[],</span> <span class="kt">byte</span><span class="o">[]&gt;&gt;)</span> <span class="n">connection</span> <span class="o">-&gt;</span> <span class="o">{</span>
+
+            <span class="nc">Map</span><span class="o">&lt;</span><span class="kt">byte</span><span class="o">[],</span> <span class="kt">byte</span><span class="o">[]&gt;</span> <span class="n">hash1</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="na">hGetAll</span><span class="o">(</span><span class="n">phantomKey</span><span class="o">);</span>
+
+            <span class="k">if</span> <span class="o">(!</span><span class="nc">CollectionUtils</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">(</span><span class="n">hash1</span><span class="o">))</span> <span class="o">{</span>
+                <span class="n">connection</span><span class="o">.</span><span class="na">del</span><span class="o">(</span><span class="n">phantomKey</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="k">return</span> <span class="n">hash1</span><span class="o">;</span>
+        <span class="o">});</span>
+
+        <span class="nc">Object</span> <span class="n">value</span> <span class="o">=</span> <span class="nc">CollectionUtils</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">(</span><span class="n">hash</span><span class="o">)</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="n">converter</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="nc">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="k">new</span> <span class="nc">RedisData</span><span class="o">(</span><span class="n">hash</span><span class="o">));</span>
+
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">channelAsBytes</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="na">getChannel</span><span class="o">();</span>
+        <span class="nc">String</span> <span class="n">channel</span> <span class="o">=</span> <span class="o">!</span><span class="nc">ObjectUtils</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">(</span><span class="n">channelAsBytes</span><span class="o">)</span>
+            <span class="o">?</span> <span class="n">converter</span><span class="o">.</span><span class="na">getConversionService</span><span class="o">().</span><span class="na">convert</span><span class="o">(</span><span class="n">channelAsBytes</span><span class="o">,</span> <span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+            <span class="o">:</span> <span class="kc">null</span><span class="o">;</span>
+
+        <span class="nc">RedisKeyExpiredEvent</span> <span class="n">event</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">RedisKeyExpiredEvent</span><span class="o">(</span><span class="n">channel</span><span class="o">,</span> <span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+
+        <span class="n">ops</span><span class="o">.</span><span class="na">execute</span><span class="o">((</span><span class="nc">RedisCallback</span><span class="o">&lt;</span><span class="nc">Void</span><span class="o">&gt;)</span> <span class="n">connection</span> <span class="o">-&gt;</span> <span class="o">{</span>
+
+            <span class="n">connection</span><span class="o">.</span><span class="na">sRem</span><span class="o">(</span><span class="n">converter</span><span class="o">.</span><span class="na">getConversionService</span><span class="o">().</span><span class="na">convert</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getKeyspace</span><span class="o">(),</span> <span class="kt">byte</span><span class="o">[].</span><span class="na">class</span><span class="o">),</span> <span class="n">event</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+            <span class="k">new</span> <span class="nf">IndexWriter</span><span class="o">(</span><span class="n">connection</span><span class="o">,</span> <span class="n">converter</span><span class="o">).</span><span class="na">removeKeyFromIndexes</span><span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getKeyspace</span><span class="o">(),</span> <span class="n">event</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">});</span>
+
+        <span class="n">publishEvent</span><span class="o">(</span><span class="n">event</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isKeyExpirationMessage</span><span class="o">(</span><span class="nc">Message</span> <span class="n">message</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nc">BinaryKeyspaceIdentifier</span><span class="o">.</span><span class="na">isValid</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">getBody</span><span class="o">());</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>보기만 해도 복잡하다.</p>
+
+<p>대략 다음과 같은 일들을 하고 있음을 알 수 있다.</p>
+
+<ul>
+  <li>Redis에서 <code class="language-plaintext highlighter-rouge">__keyevent@*__:expired</code> 메시지를 수신한다.</li>
+  <li>메시지를 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 로 변환하고, 발행한다.</li>
+  <li>불필요한 <code class="language-plaintext highlighter-rouge">PhantomKey</code> 를 삭제한다.</li>
+</ul>
+
+<p>이와 유사한 방식으로 <code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 를 상속받아 구현한 후에, <code class="language-plaintext highlighter-rouge">RedisMessageListenerContainer</code> 를 주입받아서 사용하면 된다.<sup id="fnref:6" role="doc-noteref"><a href="#fn:6" class="footnote" rel="footnote">6</a></sup></p>
+
+<p>나는 매우 게으른 사람이기에 위 방법을 사용하지 않는다.</p>
+
+<h3 id="rediskeyexpiredevent-를-eventlistener-로-처리">
+<code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 를 <code class="language-plaintext highlighter-rouge">@EventListener</code> 로 처리</h3>
+
+<p>매우 간편하고 실용적인 방법이다.</p>
+
+<p>관련하여 본인이 직접 작성한 미천한 테스트 코드를 보자.</p>
+
+<h4 id="domainjava">Domain.java</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">com.example.ideas.expired.domain</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.data.annotation.Id</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisHash</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">lombok.Value</span><span class="o">;</span>
+
+
+<span class="nd">@RedisHash</span><span class="o">(</span><span class="n">timeToLive</span> <span class="o">=</span> <span class="mi">2L</span><span class="o">)</span>
+<span class="nd">@Value</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Domain</span> <span class="kd">implements</span> <span class="nc">Serializable</span> <span class="o">{</span>
+
+    <span class="nd">@Id</span>
+    <span class="nc">Long</span> <span class="n">id</span><span class="o">;</span>
+    <span class="nc">String</span> <span class="n">name</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">Domain</span><span class="o">(</span><span class="nc">Long</span> <span class="n">id</span><span class="o">,</span> <span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">id</span> <span class="o">=</span> <span class="n">id</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="domainrepositoryjava">DomainRepository.java</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">com.example.ideas.expired.repository</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.data.repository.CrudRepository</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.domain.Domain</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">DomainRepository</span> <span class="kd">extends</span> <span class="nc">CrudRepository</span><span class="o">&lt;</span><span class="nc">Domain</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="o">{</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="dumbjava">Dumb.java</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">com.example.ideas.expired.domain</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.data.annotation.Id</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisHash</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">lombok.Value</span><span class="o">;</span>
+
+<span class="nd">@RedisHash</span><span class="o">(</span><span class="n">timeToLive</span> <span class="o">=</span> <span class="mi">3L</span><span class="o">)</span>
+<span class="nd">@Value</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Dumb</span> <span class="kd">implements</span> <span class="nc">Serializable</span> <span class="o">{</span>
+
+
+    <span class="nd">@Id</span>
+    <span class="nc">Long</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="nc">Double</span> <span class="n">value</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">Dumb</span><span class="o">(</span><span class="nc">Long</span> <span class="n">id</span><span class="o">,</span> <span class="nc">Double</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">id</span> <span class="o">=</span> <span class="n">id</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="dumbrepositoryjava">DumbRepository.java</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">com.example.ideas.expired.repository</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.data.repository.CrudRepository</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.domain.Dumb</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">DumbRepository</span> <span class="kd">extends</span> <span class="nc">CrudRepository</span><span class="o">&lt;</span><span class="nc">Dumb</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="o">{</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="redistemplateconfigjava">RedisTemplateConfig.java</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">com.example.ideas.expired.config</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.boot.autoconfigure.data.redis.RedisProperties</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.context.annotation.Bean</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.context.annotation.Configuration</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.connection.RedisConnectionFactory</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisTemplate</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.serializer.StringRedisSerializer</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">lombok.RequiredArgsConstructor</span><span class="o">;</span>
+
+<span class="nd">@Configuration</span>
+<span class="nd">@RequiredArgsConstructor</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RedisTemplateConfig</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">RedisProperties</span> <span class="n">redisProperties</span><span class="o">;</span>
+
+    <span class="nd">@Bean</span>
+    <span class="kd">public</span> <span class="nc">RedisConnectionFactory</span> <span class="nf">lettuceConnectionFactory</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">LettuceConnectionFactory</span><span class="o">(</span><span class="n">redisProperties</span><span class="o">.</span><span class="na">getHost</span><span class="o">(),</span> <span class="n">redisProperties</span><span class="o">.</span><span class="na">getPort</span><span class="o">());</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Bean</span>
+    <span class="kd">public</span> <span class="nc">RedisTemplate</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="nf">redisTemplate</span><span class="o">(</span><span class="nc">RedisConnectionFactory</span> <span class="n">connectionFactory</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">RedisTemplate</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="n">redisTemplate</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">RedisTemplate</span><span class="o">&lt;&gt;();</span>
+        <span class="n">redisTemplate</span><span class="o">.</span><span class="na">setConnectionFactory</span><span class="o">(</span><span class="n">connectionFactory</span><span class="o">);</span>
+        <span class="n">redisTemplate</span><span class="o">.</span><span class="na">setKeySerializer</span><span class="o">(</span><span class="k">new</span> <span class="nc">StringRedisSerializer</span><span class="o">());</span>
+        <span class="n">redisTemplate</span><span class="o">.</span><span class="na">setValueSerializer</span><span class="o">(</span><span class="k">new</span> <span class="nc">GenericJackson2JsonRedisSerializer</span><span class="o">());</span>
+        <span class="k">return</span> <span class="n">redisTemplate</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="expiredlistenerjava">ExpiredListener.java</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">com.example.ideas.expired.listener</span><span class="o">;</span>
+
+
+<span class="kn">import</span> <span class="nn">org.springframework.context.event.EventListener</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.data.redis.core.RedisKeyExpiredEvent</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.stereotype.Component</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.domain.Domain</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">lombok.Getter</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">lombok.extern.slf4j.Slf4j</span><span class="o">;</span>
+
+<span class="nd">@Slf4j</span>
+<span class="nd">@Component</span>
+<span class="nd">@Getter</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExpiredListener</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">domainCount</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">othersCount</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+
+    <span class="nd">@EventListener</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleExpiredEvent</span><span class="o">(</span><span class="nc">RedisKeyExpiredEvent</span><span class="o">&lt;</span><span class="nc">Domain</span><span class="o">&gt;</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">event</span><span class="o">.</span><span class="na">getValue</span><span class="o">()</span> <span class="k">instanceof</span> <span class="nc">Domain</span> <span class="n">domainValue</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event received: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">);</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event source: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getSource</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event keyspace: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getKeyspace</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event channel: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getChannel</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event id: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event timestamp: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getTimestamp</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event class: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getClass</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Domain event value: {}"</span><span class="o">,</span> <span class="n">domainValue</span><span class="o">);</span>
+            <span class="n">domainCount</span> <span class="o">+=</span> <span class="mi">1</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event received: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">);</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event source: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getSource</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event keyspace: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getKeyspace</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event channel: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getChannel</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event id: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event timestamp: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getTimestamp</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event class: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getClass</span><span class="o">());</span>
+            <span class="n">log</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Unknown event value: {}"</span><span class="o">,</span> <span class="n">event</span><span class="o">.</span><span class="na">getValue</span><span class="o">());</span>
+            <span class="n">othersCount</span> <span class="o">+=</span> <span class="mi">1</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">resetCount</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">domainCount</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="n">othersCount</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="redisexpiredtestjava">RedisExpiredTest.java</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">com.example.ideas.expired</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.beans.factory.annotation.Autowired</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.boot.test.context.SpringBootTest</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.context.annotation.Import</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.junit.jupiter.api.BeforeEach</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.junit.jupiter.api.Test</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.config.EmbeddedRedisConfig</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.config.RedisConfig</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.domain.Domain</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.domain.Dumb</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.listener.ExpiredListener</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.repository.DomainRepository</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.example.ideas.expired.repository.DumbRepository</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">org</span><span class="o">.</span><span class="na">assertj</span><span class="o">.</span><span class="na">core</span><span class="o">.</span><span class="na">api</span><span class="o">.</span><span class="na">Assertions</span><span class="o">.</span><span class="na">assertThat</span><span class="o">;</span>
+
+<span class="nd">@SpringBootTest</span>
+<span class="c1">// server 또는 embedded 를 선택한다. 프로필로 설정한다.</span>
+<span class="nd">@Import</span><span class="o">({</span><span class="nc">RedisConfig</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="nc">EmbeddedRedisConfig</span><span class="o">.</span><span class="na">class</span><span class="o">})</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RedisExpiredTest</span> <span class="o">{</span>
+
+    <span class="nd">@Autowired</span>
+    <span class="kd">private</span> <span class="nc">DomainRepository</span> <span class="n">domainRepository</span><span class="o">;</span>
+
+    <span class="nd">@Autowired</span>
+    <span class="kd">private</span> <span class="nc">DumbRepository</span> <span class="n">dumbRepository</span><span class="o">;</span>
+
+    <span class="c1">// Expire 이벤트를 받는 리스너를 주입받는다.</span>
+    <span class="nd">@Autowired</span>
+    <span class="kd">private</span> <span class="nc">ExpiredListener</span> <span class="n">expiredListener</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">Domain</span> <span class="n">domain</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Domain</span><span class="o">(</span><span class="mi">1L</span><span class="o">,</span> <span class="s">"test"</span><span class="o">);</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">Dumb</span> <span class="n">dumb</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Dumb</span><span class="o">(</span><span class="mi">1L</span><span class="o">,</span> <span class="mf">42.0</span><span class="o">);</span>
+
+    <span class="c1">// 테스트가 시작되기 전에 모든 데이터를 삭제하고, 리스너의 카운트를 초기화한다.</span>
+    <span class="nd">@BeforeEach</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setUp</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">domainRepository</span><span class="o">.</span><span class="na">deleteAll</span><span class="o">();</span>
+        <span class="n">dumbRepository</span><span class="o">.</span><span class="na">deleteAll</span><span class="o">();</span>
+        <span class="n">expiredListener</span><span class="o">.</span><span class="na">resetCount</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Test</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">domainExpiredTest</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">InterruptedException</span> <span class="o">{</span>
+        <span class="c1">// given</span>
+        <span class="c1">// 2초 후에 만료되는 도메인을 저장한다.</span>
+        <span class="n">domainRepository</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">domain</span><span class="o">);</span>
+
+        <span class="c1">// 저장된 도메인의 개수는 1개이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">domainRepository</span><span class="o">.</span><span class="na">count</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="c1">// 리스너의 도메인 카운트는 0이다. (아직 만료되지 않았기 때문)</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getDomainCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getOthersCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+
+        <span class="c1">// when</span>
+        <span class="c1">// 3초 후에 만료된 도메인을 조회한다. (2초로 하면 이벤트 처리 과정이 약간 늦어 실패하는 경우가 있다.)</span>
+        <span class="nc">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="mi">3000</span><span class="o">);</span>
+
+        <span class="c1">// then</span>
+        <span class="c1">// 도메인의 개수는 0개이다. (만료되었기 때문)</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">domainRepository</span><span class="o">.</span><span class="na">count</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="c1">// 리스너의 도메인 Expire 카운트는 1이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getDomainCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="c1">// 리스너의 기타 Expire 카운트는 0이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getOthersCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Test</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">mixedTest</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">InterruptedException</span> <span class="o">{</span>
+        <span class="c1">// given</span>
+        <span class="c1">// 2초 후에 만료되는 도메인과 3초 후에 만료되는 다른 도메인 객체를 설정한다.</span>
+        <span class="n">dumbRepository</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">dumb</span><span class="o">);</span>
+        <span class="n">domainRepository</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">domain</span><span class="o">);</span>
+
+        <span class="c1">// 저장된 도메인의 개수는 1개이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">domainRepository</span><span class="o">.</span><span class="na">count</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="c1">// 저장된 다른 도메인의 개수는 1개이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">dumbRepository</span><span class="o">.</span><span class="na">count</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="c1">// 리스너의 도메인 카운트는 0이다. (아직 만료되지 않았기 때문)</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getDomainCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="c1">// 리스너의 기타 카운트는 0이다. (아직 만료되지 않았기 때문)</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getOthersCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+
+        <span class="c1">// when</span>
+        <span class="c1">// 4초 후에 만료된 도메인들을 조회한다.</span>
+        <span class="nc">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="mi">4000</span><span class="o">);</span>
+
+        <span class="c1">// then</span>
+        <span class="c1">// 도메인의 개수는 삭제되어 0개이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">domainRepository</span><span class="o">.</span><span class="na">count</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="c1">// 다른 도메인의 개수도 삭제되어 0개이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">dumbRepository</span><span class="o">.</span><span class="na">count</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="c1">// 리스너의 도메인 Expire 카운트는 1이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getDomainCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="c1">// 리스너의 기타 Expire 카운트는 1이다.</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">expiredListener</span><span class="o">.</span><span class="na">getOthersCount</span><span class="o">()).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>테스트를 실행해보면 다음과 같은 결과를 얻을 수 있다.</p>
+
+<h4 id="도메인-단독-expire-테스트-domainexpiredtest">도메인 단독 expire 테스트 (<code class="language-plaintext highlighter-rouge">domainExpiredTest</code>)</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2023-03-14T18:30:58.395+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event received: RedisKeyExpiredEvent [keyspace=com.example.ideas.expired.domain.Domain, id=1]
+2023-03-14T18:30:58.398+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event source: [99, 111, 109, 46, 101, 120, 97, 109, 112, 108, 101, 46, 105, 100, 101, 97, 115, 46, 101, 120, 112, 105, 114, 101, 100, 46, 100, 111, 109, 97, 105, 110, 46, 68, 111, 109, 97, 105, 110, 58, 49]
+2023-03-14T18:30:58.398+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event keyspace: com.example.ideas.expired.domain.Domain
+2023-03-14T18:30:58.398+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event channel: __keyevent@0__:expired
+2023-03-14T18:30:58.398+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event id: [49]
+2023-03-14T18:30:58.398+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event timestamp: 1678786258391
+2023-03-14T18:30:58.398+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event class: class org.springframework.data.redis.core.RedisKeyExpiredEvent
+2023-03-14T18:30:58.398+09:00  INFO 173173 --- [enerContainer-1] c.e.i.expired.listener.ExpiredListener   : Domain event value: Domain(id=1, name=test)
+</code></pre></div></div>
+
+<h4 id="다른-도메인과-함께-expire-테스트-mixedtest">다른 도메인과 함께 expire 테스트 (<code class="language-plaintext highlighter-rouge">mixedTest</code>)</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2023-03-14T18:31:01.391+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event received: RedisKeyExpiredEvent [keyspace=com.example.ideas.expired.domain.Domain, id=1]
+2023-03-14T18:31:01.392+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event source: [99, 111, 109, 46, 101, 120, 97, 109, 112, 108, 101, 46, 105, 100, 101, 97, 115, 46, 101, 120, 112, 105, 114, 101, 100, 46, 100, 111, 109, 97, 105, 110, 46, 68, 111, 109, 97, 105, 110, 58, 49]
+2023-03-14T18:31:01.392+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event keyspace: com.example.ideas.expired.domain.Domain
+2023-03-14T18:31:01.392+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event channel: __keyevent@0__:expired
+2023-03-14T18:31:01.392+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event id: [49]
+2023-03-14T18:31:01.392+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event timestamp: 1678786261388
+2023-03-14T18:31:01.392+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event class: class org.springframework.data.redis.core.RedisKeyExpiredEvent
+2023-03-14T18:31:01.393+09:00  INFO 173173 --- [enerContainer-2] c.e.i.expired.listener.ExpiredListener   : Domain event value: Domain(id=1, name=test)
+2023-03-14T18:31:02.389+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event received: RedisKeyExpiredEvent [keyspace=com.example.ideas.expired.domain.Dumb, id=1]
+2023-03-14T18:31:02.389+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event source: [99, 111, 109, 46, 101, 120, 97, 109, 112, 108, 101, 46, 105, 100, 101, 97, 115, 46, 101, 120, 112, 105, 114, 101, 100, 46, 100, 111, 109, 97, 105, 110, 46, 68, 117, 109, 98, 58, 49]
+2023-03-14T18:31:02.389+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event keyspace: com.example.ideas.expired.domain.Dumb
+2023-03-14T18:31:02.389+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event channel: __keyevent@0__:expired
+2023-03-14T18:31:02.389+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event id: [49]
+2023-03-14T18:31:02.389+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event timestamp: 1678786262389
+2023-03-14T18:31:02.389+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event class: class org.springframework.data.redis.core.RedisKeyExpiredEvent
+2023-03-14T18:31:02.390+09:00  INFO 173173 --- [enerContainer-3] c.e.i.expired.listener.ExpiredListener   : Unknown event value: Dumb(id=1, value=42.0)
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent&lt;Domain&gt;</code> 클래스로 파라미터를 명시했음에도 불구하고, <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent&lt;Dumb&gt;</code> 이벤트도 받아서 처리함을 확인할 수 있다. 물론 RedisKeyExpiredEvent 를 상속해서 Predicate 등을 섞고, 이를 보완하는 이벤트 리스너를 만들 수는 있겠지만, 다른 사람이 보기에 이게 뭔가 싶을테니 굳이 그럴 필요가 있을까…싶은 생각이다.</p>
+
+<h2 id="결론">결론</h2>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">Spring Data Redis</code>를 사용하면 <code class="language-plaintext highlighter-rouge">Redis</code>의 <code class="language-plaintext highlighter-rouge">keyspace notification</code>을 이용하여 <code class="language-plaintext highlighter-rouge">expire</code> 이벤트를 받을 수 있다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">Keyspace</code> 옵션 (<code class="language-plaintext highlighter-rouge">enableKeyspaceEvents</code>) 을 켠 경우, <code class="language-plaintext highlighter-rouge">Phantom</code> 키 값을 사용하여 <code class="language-plaintext highlighter-rouge">expire</code> 이벤트 발생 시 <code class="language-plaintext highlighter-rouge">key</code>, <code class="language-plaintext highlighter-rouge">value</code> 모두를 완전하게 이벤트 형식으로 받을 수 있다</li>
+  <li>이 때, <code class="language-plaintext highlighter-rouge">Phantom</code> 키 값이 중복으로 사용되어 <code class="language-plaintext highlighter-rouge">redisTemplate</code> 사용 대비 메모리를 많이 소모한다.
+    <ul>
+      <li>
+<code class="language-plaintext highlighter-rouge">Expire</code> 이벤트를 사용하지 않는다면, <code class="language-plaintext highlighter-rouge">Keyspace</code> 이벤트와 <code class="language-plaintext highlighter-rouge">Phantom</code> 키 값을 사용하지 않도록 설정하는 것이 메모리 최적화에 도움이 된다.</li>
+      <li>
+<code class="language-plaintext highlighter-rouge">Keyspace</code> 옵션이 켜져 있는 경우, <code class="language-plaintext highlighter-rouge">shadowCopy</code> 옵션에 따라 두 가지로 분기된다.
+        <ul>
+          <li>
+<code class="language-plaintext highlighter-rouge">shadowCopy</code> 값이 <code class="language-plaintext highlighter-rouge">DEFAULT</code> 또는 <code class="language-plaintext highlighter-rouge">ON</code> 일 경우 <code class="language-plaintext highlighter-rouge">Phantom</code> 키 값을 추가로 사용하여 만료된 도메인 객체를 받을 수 있다.</li>
+          <li>
+<code class="language-plaintext highlighter-rouge">shadowCopy</code> 값이 <code class="language-plaintext highlighter-rouge">OFF</code> 일 경우 <code class="language-plaintext highlighter-rouge">Phantom</code> 키 값을 사용하지 않고 만료된 키 값만 반환된다.</li>
+        </ul>
+      </li>
+      <li>
+<code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code>를 사용해서 <code class="language-plaintext highlighter-rouge">TTL</code>이 만료된 도메인 객체를 온전하게 받을 수 있다.
+        <ul>
+          <li>
+<code class="language-plaintext highlighter-rouge">KeyExpirationEventMessageListener</code> 리스너 클래스를 상속, 구현하여 이벤트 컨테이너에 등록하여 이벤트를 수신할 수 있다.</li>
+          <li>
+<code class="language-plaintext highlighter-rouge">@EventListener</code> 어노테이션과 <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 클래스를 사용하여 이벤트를 수신할 수 있다.
+            <ul>
+              <li>단, <code class="language-plaintext highlighter-rouge">RedisKeyExpiredEvent</code> 이벤트를 수신하더라도 특정 도메인 객체만을 수신할 수 없으므로 <code class="language-plaintext highlighter-rouge">value</code> 값 등을 사용하여 추가적으로 검증하여야 한다.</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+<code class="language-plaintext highlighter-rouge">AWS ElasticCache</code>를 사용하는 경우, <code class="language-plaintext highlighter-rouge">CONFIG</code> 명령어를 사용할 수 없어 <code class="language-plaintext highlighter-rouge">notify-keyspace-events</code> 변경을 다른 방법으로 해야 한다.<sup id="fnref:7" role="doc-noteref"><a href="#fn:7" class="footnote" rel="footnote">7</a></sup>, <sup id="fnref:8" role="doc-noteref"><a href="#fn:8" class="footnote" rel="footnote">8</a></sup>
+</li>
+</ul>
+
+<h2 id="reference">Reference</h2>
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1" role="doc-endnote">
+      <p><a href="https://redis.io/docs/manual/keyspace-notifications">https://redis.io/docs/manual/keyspace-notifications</a> <a href="#fnref:1" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+    <li id="fn:2" role="doc-endnote">
+      <p><a href="https://github.com/spring-projects/spring-data-redis/blob/main/src/main/java/org/springframework/data/redis/repository/configuration/EnableRedisRepositories.java#L56">https://github.com/spring-projects/spring-data-redis/blob/main/src/main/java/org/springframework/data/redis/repository/configuration/EnableRedisRepositories.java#L56</a> <a href="#fnref:2" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+    <li id="fn:3" role="doc-endnote">
+      <p><a href="https://engineering.salesforce.com/lessons-learned-using-spring-data-redis-f3121f89bff9">https://engineering.salesforce.com/lessons-learned-using-spring-data-redis-f3121f89bff9</a> <a href="#fnref:3" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+    <li id="fn:4" role="doc-endnote">
+      <p><a href="https://hyperconnect.github.io/2022/12/12/fix-increasing-memory-usage.html">https://hyperconnect.github.io/2022/12/12/fix-increasing-memory-usage.html</a> <a href="#fnref:4" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+    <li id="fn:5" role="doc-endnote">
+      <p><a href="https://github.com/spring-projects/spring-data-redis/blob/main/src/main/java/org/springframework/data/redis/core/RedisKeyValueAdapter.java#L722-L725">https://github.com/spring-projects/spring-data-redis/blob/a7d39147cf3f9649b0609a10fc43e5672c732193/src/main/java/org/springframework/data/redis/core/RedisKeyValueAdapter.java#L722-L725</a> <a href="#fnref:5" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+    <li id="fn:6" role="doc-endnote">
+      <p><a href="https://github.com/spring-projects/spring-data-redis/blob/a7d39147cf3f9649b0609a10fc43e5672c732193/src/main/java/org/springframework/data/redis/listener/KeyExpirationEventMessageListener.java#L44-L46">https://github.com/spring-projects/spring-data-redis/blob/a7d39147cf3f9649b0609a10fc43e5672c732193/src/main/java/org/springframework/data/redis/listener/KeyExpirationEventMessageListener.java#L44-L46</a> <a href="#fnref:6" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+    <li id="fn:7" role="doc-endnote">
+      <p><a href="https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis.repositories.expirations">https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis.repositories.expirations</a> <a href="#fnref:7" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+    <li id="fn:8" role="doc-endnote">
+      <p><a href="https://stackoverflow.com/questions/57046175/startup-error-using-spring-boot-starter-data-redis-on-aws-using-ssl">https://stackoverflow.com/questions/57046175/startup-error-using-spring-boot-starter-data-redis-on-aws-using-ssl</a> <a href="#fnref:8" class="reversefootnote" role="doc-backlink">↩</a></p>
+    </li>
+  </ol>
+</div>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/linux/kime/2023/03/14/Kime.html" title="Kime">Kime</a><a class="next" href="/scrapy/2024/02/01/Scrapy-Feed-Exports.html" title="Scrapy Feed Exports">Scrapy Feed Exports</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/history/reference/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4.html" title="Scrapy Feed Exports">만났던 개발 레퍼런스</a></li>
+<li><a class="post-link" href="/spring/redis/2023/03/14/Spring-Redis-Key-Expire-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%ED%99%9C%EC%9A%A9.html" title="Scrapy Feed Exports">Spring Redis Key Expire 이벤트 활용</a></li>
+<li><a class="post-link" href="/scrapy/2024/02/01/Scrapy-Feed-Exports.html" title="Scrapy Feed Exports">Scrapy Feed Exports</a></li>
+<li><a class="post-link" href="/linux/kime/2023/03/14/Kime.html" title="Scrapy Feed Exports">Kime</a></li>
+</ul>
+    </div>
+<div class="post-comments">
+<div id="utterances-placeholder"></div>
+<script>
+  const utterancesThemeFromDataTheme = () => {
+    const dataTheme = document.documentElement.getAttribute('data-theme');
+    return `github-${dataTheme}`;
+  };
+
+  const setUtterancesTheme = () => {
+    const iframe = document.querySelector('.utterances-frame');
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: utterancesThemeFromDataTheme()
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es');
+    }
+  }
+
+  // dynamic change
+  const observer = new MutationObserver((mutationsList, observer) => {
+    for (let mutation of mutationsList) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+        setUtterancesTheme();
+      }
+    }
+  });
+  observer.observe(document.documentElement, { attributes: true, childList: false, subtree: false });
+
+  let utterancesScript = document.createElement('script');
+  utterancesScript.async = true;
+  utterancesScript.src = 'https://utteranc.es/client.js';
+  utterancesScript.crossOrigin = 'anonymous';
+  utterancesScript.setAttribute('issue-term', 'title');
+  utterancesScript.setAttribute('label', 'utterances comment');
+  utterancesScript.setAttribute('repo', 'cda2/blog_comments');
+  utterancesScript.setAttribute('theme', utterancesThemeFromDataTheme());
+
+  const placeholder = document.getElementById('utterances-placeholder');
+  placeholder.parentNode.replaceChild(utterancesScript, placeholder);
+</script>
+</div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>Copyright © 2024 <a href="https://github.com/cda2">cda2</a>
+</div>
+      <div>Powered by <a title="Jekyll is a simple, blog-aware, static site
+      generator." href="https://jekyllrb.com/">Jekyll</a> &amp; <a title="Yat, yet
+      another theme." href="https://github.com/jeffreytse/jekyll-theme-yat">Yat Theme</a>.</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

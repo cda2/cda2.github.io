@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가 | cda2</title>
+<meta name="generator" content="Jekyll v3.9.5">
+<meta property="og:title" content="Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가">
+<meta name="author" content="cda2">
+<meta property="og:locale" content="ko">
+<meta name="description" content="개요">
+<meta property="og:description" content="개요">
+<link rel="canonical" href="https://cda2.github.io/scrapy/2024/06/12/Scrapy%EB%8A%94-%EC%A2%85%EB%A3%8C-%EC%8B%9C%EC%A0%90%EC%97%90-Item%EC%9D%84-Yield-%ED%95%A0-%EC%88%98-%EC%97%86%EB%8A%94%EA%B0%80.html">
+<meta property="og:url" content="https://cda2.github.io/scrapy/2024/06/12/Scrapy%EB%8A%94-%EC%A2%85%EB%A3%8C-%EC%8B%9C%EC%A0%90%EC%97%90-Item%EC%9D%84-Yield-%ED%95%A0-%EC%88%98-%EC%97%86%EB%8A%94%EA%B0%80.html">
+<meta property="og:site_name" content="cda2">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2024-06-12T16:10:51+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"cda2"},"dateModified":"2024-06-12T16:10:51+00:00","datePublished":"2024-06-12T16:10:51+00:00","description":"개요","headline":"Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가","mainEntityOfPage":{"@type":"WebPage","@id":"https://cda2.github.io/scrapy/2024/06/12/Scrapy%EB%8A%94-%EC%A2%85%EB%A3%8C-%EC%8B%9C%EC%A0%90%EC%97%90-Item%EC%9D%84-Yield-%ED%95%A0-%EC%88%98-%EC%97%86%EB%8A%94%EA%B0%80.html"},"url":"https://cda2.github.io/scrapy/2024/06/12/Scrapy%EB%8A%94-%EC%A2%85%EB%A3%8C-%EC%8B%9C%EC%A0%90%EC%97%90-Item%EC%9D%84-Yield-%ED%95%A0-%EC%88%98-%EC%97%86%EB%8A%94%EA%B0%80.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="https://cda2.github.io/feed.xml" title="cda2">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: capitalize;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <link rel="stylesheet" href="/assets/css/custom.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="cda2" src="" onerror="this.style.display='none'">
+  cda2
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/articles.html">ARTICLES</a><a class="page-link" href="/categories.html">CATEGORIES</a>
+
+
+
+
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2024-06-12T16:10:51+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> 2024-06-12
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 1 hour 28 mins</span>
+  </p></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <h2 id="개요">개요</h2>
+
+<p><code class="language-plaintext highlighter-rouge">Scrapy</code> 프레임워크는 특성 상 종료 시점에 <code class="language-plaintext highlighter-rouge">Item</code> 을 <code class="language-plaintext highlighter-rouge">Yield</code> 할 수 없는데, 간단한 우회법으로 이를 가능하게 해본다.</p>
+
+<h2 id="tldr">TL;DR</h2>
+
+<p>최소 두 가지 기능을 사용하면 **상당히 지저분하지만
+** 아키텍처나 Scrapy의 기본 구조를 뒤집어 엎지 않고도 종료 시점에 <code class="language-plaintext highlighter-rouge">Item</code>을 <code class="language-plaintext highlighter-rouge">Yield</code> 처리 할 수 있다.</p>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">Scrapy</code> 프레임워크 내부에 있는 <a href="https://github.com/scrapy/scrapy/blob/1282ddf8f77299edf613679c2ee0b606e96808ce/scrapy/core/scraper.py#L110">Scraper</a> 를 사용할 것</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">Twisted</code> 의 <a href="https://docs.twisted.org/en/stable/core/howto/defer.html">Deferred</a> 객체를 사용하여 Signal 기반으로 처리할 것</li>
+</ol>
+
+<p>여러가지 방법이 있지만, 위의 절차를 가장 쉽고 빠르게 적용할 수 있는 방법은 다음과 같다.</p>
+
+<ol>
+  <li>Scraper 클래스의 <a href="https://github.com/scrapy/scrapy/blob/1282ddf8f77299edf613679c2ee0b606e96808ce/scrapy/core/scraper.py#L272-L308"><code class="language-plaintext highlighter-rouge">handle_spider_output</code></a> 메서드를 적용한다.</li>
+  <li>적용한 결과는 <code class="language-plaintext highlighter-rouge">Deferred</code> 객체이므로 이를 시그널 처리가 가능한 메서드 단에서 반환한다.</li>
+</ol>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">close_spider</code> 메서드는 <code class="language-plaintext highlighter-rouge">Deferred</code> 기반의 시그널 처리를 지원한다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">from_crawler</code> 등에서 시그널 연결을 기본적으로 지원하므로, 구현하기 편리하다.</li>
+</ul>
+
+<p>간단한 단 건 처리 예시를 작성해보면 다음과 같다.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="p">...</span>
+	<span class="k">def</span> <span class="nf">close_spider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span>
+		<span class="p">...</span>
+		<span class="n">item</span><span class="p">:</span> <span class="n">Item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">(...)</span>
+		<span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">]</span>
+		<span class="n">fake_req</span><span class="p">:</span> <span class="n">Request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(...)</span>
+		<span class="n">fake_res</span><span class="p">:</span> <span class="n">Response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(...)</span>
+		<span class="n">item_dfd</span><span class="p">:</span> <span class="n">Deferred</span> <span class="o">=</span> <span class="n">spider</span><span class="p">.</span><span class="n">crawler</span><span class="p">.</span><span class="n">engine</span><span class="p">.</span><span class="n">scraper</span><span class="p">.</span><span class="n">handle_spider_output</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">fake_req</span><span class="p">,</span> <span class="n">fake_res</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">item_dfd</span>
+</code></pre></div></div>
+
+<p>여러 건을 한 번에 처리해야 하는 케이스를 작성해보면 다음과 같다.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="p">...</span>
+	<span class="k">def</span> <span class="nf">close_spider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span>
+		<span class="p">...</span>
+		<span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Item</span><span class="p">]</span> <span class="o">=</span> <span class="p">[...]</span>
+		<span class="n">fake_req</span><span class="p">:</span> <span class="n">Request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(...)</span>
+		<span class="n">fake_res</span><span class="p">:</span> <span class="n">Response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(...)</span>
+		<span class="n">parallel_item_dfd</span><span class="p">:</span> <span class="n">Deferred</span> <span class="o">=</span> <span class="n">spider</span><span class="p">.</span><span class="n">crawler</span><span class="p">.</span><span class="n">engine</span><span class="p">.</span><span class="n">scraper</span><span class="p">.</span><span class="n">handle_spider_output</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">fake_req</span><span class="p">,</span> <span class="n">fake_res</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">parallel_item_dfd</span>
+
+</code></pre></div></div>
+
+<p>여러 건을 나누어서 (페이징 등) 처리해야 하는 케이스를 작성해보면 다음과 같다.</p>
+
+<ul>
+  <li>원격 DB 를 사용하고 있어, 데이터베이스에 부하를 줄이려는 목적 등의 경우 사용</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">twisted.internet.defer</span> <span class="kn">import</span> <span class="n">gatherResults</span>
+	<span class="p">...</span>
+	<span class="k">def</span> <span class="nf">close_spider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span>
+		<span class="p">...</span>
+		<span class="n">dfd_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Deferred</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">...</span>
+		<span class="n">fake_req</span><span class="p">:</span> <span class="n">Request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(...)</span>
+		<span class="n">fake_res</span><span class="p">:</span> <span class="n">Response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(...)</span>
+
+		<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="p">...:</span>
+			<span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Item</span><span class="p">]</span> <span class="o">=</span> <span class="p">[...]</span>
+			<span class="n">part_parallel_dfd</span><span class="p">:</span> <span class="n">Deferred</span> <span class="o">=</span> <span class="n">spider</span><span class="p">.</span><span class="n">crawler</span><span class="p">.</span><span class="n">engine</span><span class="p">.</span><span class="n">scraper</span><span class="p">.</span><span class="n">handle_spider_output</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">fake_req</span><span class="p">,</span> <span class="n">fake_res</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+			<span class="n">dfd_list</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">part_parallel_dfd</span><span class="p">)</span>
+			
+		<span class="k">return</span> <span class="n">gatherResults</span><span class="p">(</span><span class="n">dfd_list</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="상세-설명">상세 설명</h2>
+
+<p><code class="language-plaintext highlighter-rouge">handle_spider_output</code> 메서드는 다음과 같이 정의되어 있다.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">handle_spider_output</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">result</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">,</span> <span class="n">AsyncIterable</span><span class="p">],</span>
+        <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+        <span class="n">response</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Response</span><span class="p">,</span> <span class="n">Failure</span><span class="p">],</span>
+        <span class="n">spider</span><span class="p">:</span> <span class="n">Spider</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">defer_succeed</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="c1"># errback 이 적용된 result 래핑 객체
+</span>        <span class="n">it</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">AsyncGenerator</span><span class="p">]</span>
+        <span class="c1"># spider에서 Request | Item 을 yield 한 메서드가 비동기 메서드인 경우, 비동기 병렬 처리
+</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">AsyncIterable</span><span class="p">):</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="n">aiter_errback</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">handle_spider_error</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">spider</span>
+            <span class="p">)</span>
+            <span class="n">dfd</span> <span class="o">=</span> <span class="n">parallel_async</span><span class="p">(</span>
+                <span class="n">it</span><span class="p">,</span>
+                <span class="bp">self</span><span class="p">.</span><span class="n">concurrent_items</span><span class="p">,</span>
+                <span class="bp">self</span><span class="p">.</span><span class="n">_process_spidermw_output</span><span class="p">,</span>
+                <span class="n">request</span><span class="p">,</span>
+                <span class="n">response</span><span class="p">,</span>
+                <span class="n">spider</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="c1"># 메서드가 동기 메서드인 경우, 병렬 처리
+</span>        <span class="k">else</span><span class="p">:</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="n">iter_errback</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">handle_spider_error</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">spider</span>
+            <span class="p">)</span>
+            <span class="n">dfd</span> <span class="o">=</span> <span class="n">parallel</span><span class="p">(</span>
+                <span class="n">it</span><span class="p">,</span>
+                <span class="bp">self</span><span class="p">.</span><span class="n">concurrent_items</span><span class="p">,</span>
+                <span class="bp">self</span><span class="p">.</span><span class="n">_process_spidermw_output</span><span class="p">,</span>
+                <span class="n">request</span><span class="p">,</span>
+                <span class="n">response</span><span class="p">,</span>
+                <span class="n">spider</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">dfd</span>
+</code></pre></div></div>
+
+<p>내부에서 사용하고 있는 <code class="language-plaintext highlighter-rouge">_process_spidermw_output</code> 메서드는 다음과 같다.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">_process_spidermw_output</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">spider</span><span class="p">:</span> <span class="n">Spider</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Deferred</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
+        <span class="s">"""Process each Request/Item (given in the output parameter) returned
+        from the given spider
+        """</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="p">.</span><span class="n">slot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>  <span class="c1"># typing
+</span>        <span class="c1"># 요청 객체인 경우 engine 에 요청을 스케줄링한다.
+</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">Request</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="p">.</span><span class="n">crawler</span><span class="p">.</span><span class="n">engine</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>  <span class="c1"># typing
+</span>            <span class="bp">self</span><span class="p">.</span><span class="n">crawler</span><span class="p">.</span><span class="n">engine</span><span class="p">.</span><span class="n">crawl</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="c1"># Item 객체인 경우 `itemproc` 에게 처리를 위임한다.
+</span>        <span class="k">elif</span> <span class="n">is_item</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">slot</span><span class="p">.</span><span class="n">itemproc_size</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">dfd</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">itemproc</span><span class="p">.</span><span class="n">process_item</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+            <span class="n">dfd</span><span class="p">.</span><span class="n">addBoth</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">_itemproc_finished</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dfd</span>
+        <span class="k">elif</span> <span class="n">output</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">typename</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">output</span><span class="p">).</span><span class="n">__name__</span>
+            <span class="n">logger</span><span class="p">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">"Spider must return request, item, or None, got %(typename)r in %(request)s"</span><span class="p">,</span>
+                <span class="p">{</span><span class="s">"request"</span><span class="p">:</span> <span class="n">request</span><span class="p">,</span> <span class="s">"typename"</span><span class="p">:</span> <span class="n">typename</span><span class="p">},</span>
+                <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s">"spider"</span><span class="p">:</span> <span class="n">spider</span><span class="p">},</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</code></pre></div></div>
+
+<p>두 메서드를 좀 살펴보면, <code class="language-plaintext highlighter-rouge">itemproc</code> 변수에게 많은 것을 위임하고 있는 것을 알 수 있다. <code class="language-plaintext highlighter-rouge">itemproc</code> 은 <code class="language-plaintext highlighter-rouge">Item Processor</code> 의 약자이다.
+이에 대해서 너무 깊이 들여다 볼 필요는 없지만, 적어도 <code class="language-plaintext highlighter-rouge">itemproc</code>이 무슨 역할을 수행하는지 정도는 알아야 한다.</p>
+
+<h3 id="item-processor">Item Processor</h3>
+
+<p>다시 <code class="language-plaintext highlighter-rouge">Scraper</code> 클래스로 돌아가보자. 생성자 메서드를 보면 다음과 같이 정의되어 있다.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Scraper</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crawler</span><span class="p">:</span> <span class="n">Crawler</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">slot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Slot</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">spidermw</span><span class="p">:</span> <span class="n">SpiderMiddlewareManager</span> <span class="o">=</span> <span class="n">SpiderMiddlewareManager</span><span class="p">.</span><span class="n">from_crawler</span><span class="p">(</span>
+            <span class="n">crawler</span>
+        <span class="p">)</span>
+        <span class="n">itemproc_cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ItemPipelineManager</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_object</span><span class="p">(</span>
+            <span class="n">crawler</span><span class="p">.</span><span class="n">settings</span><span class="p">[</span><span class="s">"ITEM_PROCESSOR"</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">itemproc</span><span class="p">:</span> <span class="n">ItemPipelineManager</span> <span class="o">=</span> <span class="n">itemproc_cls</span><span class="p">.</span><span class="n">from_crawler</span><span class="p">(</span><span class="n">crawler</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">concurrent_items</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">crawler</span><span class="p">.</span><span class="n">settings</span><span class="p">.</span><span class="n">getint</span><span class="p">(</span><span class="s">"CONCURRENT_ITEMS"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">crawler</span><span class="p">:</span> <span class="n">Crawler</span> <span class="o">=</span> <span class="n">crawler</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">signals</span><span class="p">:</span> <span class="n">SignalManager</span> <span class="o">=</span> <span class="n">crawler</span><span class="p">.</span><span class="n">signals</span>
+        <span class="k">assert</span> <span class="n">crawler</span><span class="p">.</span><span class="n">logformatter</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">logformatter</span><span class="p">:</span> <span class="n">LogFormatter</span> <span class="o">=</span> <span class="n">crawler</span><span class="p">.</span><span class="n">logformatter</span>
+</code></pre></div></div>
+
+<p>살펴보면 <code class="language-plaintext highlighter-rouge">itemproc</code> 필드는 다음과 같이 생성됨을 알 수 있다.</p>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">Settings</code> 객체로부터 <code class="language-plaintext highlighter-rouge">ITEM_PROCESSOR</code> 설정 값을 추출</li>
+  <li>추출한 클래스 객체를 <code class="language-plaintext highlighter-rouge">from_crawler</code> 메서드를 호출하여 인스턴스로 만든 후, 인스턴스 변수에 저장</li>
+</ol>
+
+<p><code class="language-plaintext highlighter-rouge">Scrapy</code> 프레임워크의 문서 등을 살펴봐도 <code class="language-plaintext highlighter-rouge">ITEM_PROCESSOR</code> 에 대한 설명은 자세히 나와있지 않다.<br>
+이는 내부 구현 클래스이고, 프레임워크의 아키텍처를 뒤집어 엎을 생각이 아닌 이상 그럴 필요가 없기 때문이기도 하다.</p>
+
+<p>실제로 내부적으로 쓰이는 기본 설정 값은 <a href="https://github.com/scrapy/scrapy/blob/master/scrapy/settings/default_settings.py#L205">default_settings.py</a> 파일에서 찾을 수 있는데, 기본값으로 <code class="language-plaintext highlighter-rouge">scrapy.pipelines.ItemPipelineManager</code> 를 사용하고 있다.<br>
+이 클래스를 scrapy 내부에서 찾아보면 다음과 같은 클래스가 발견된다.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">"""  
+Item pipeline  
+  
+See documentation in docs/item-pipeline.rst  
+"""</span>  
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span>  
+  
+<span class="kn">from</span> <span class="nn">twisted.internet.defer</span> <span class="kn">import</span> <span class="n">Deferred</span>  
+  
+<span class="kn">from</span> <span class="nn">scrapy</span> <span class="kn">import</span> <span class="n">Spider</span>  
+<span class="kn">from</span> <span class="nn">scrapy.middleware</span> <span class="kn">import</span> <span class="n">MiddlewareManager</span>  
+<span class="kn">from</span> <span class="nn">scrapy.utils.conf</span> <span class="kn">import</span> <span class="n">build_component_list</span>  
+<span class="kn">from</span> <span class="nn">scrapy.utils.defer</span> <span class="kn">import</span> <span class="n">deferred_f_from_coro_f</span>  
+  
+  
+<span class="k">class</span> <span class="nc">ItemPipelineManager</span><span class="p">(</span><span class="n">MiddlewareManager</span><span class="p">):</span>  
+    <span class="n">component_name</span> <span class="o">=</span> <span class="s">"item pipeline"</span>  
+  
+    <span class="o">@</span><span class="nb">classmethod</span>  
+    <span class="k">def</span> <span class="nf">_get_mwlist_from_settings</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>  
+        <span class="k">return</span> <span class="n">build_component_list</span><span class="p">(</span><span class="n">settings</span><span class="p">.</span><span class="n">getwithbase</span><span class="p">(</span><span class="s">"ITEM_PIPELINES"</span><span class="p">))</span>  
+  
+    <span class="k">def</span> <span class="nf">_add_middleware</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>  
+        <span class="nb">super</span><span class="p">().</span><span class="n">_add_middleware</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>  
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="s">"process_item"</span><span class="p">):</span>  
+            <span class="bp">self</span><span class="p">.</span><span class="n">methods</span><span class="p">[</span><span class="s">"process_item"</span><span class="p">].</span><span class="n">append</span><span class="p">(</span>  
+                <span class="n">deferred_f_from_coro_f</span><span class="p">(</span><span class="n">pipe</span><span class="p">.</span><span class="n">process_item</span><span class="p">)</span>  
+            <span class="p">)</span>  
+    <span class="k">def</span> <span class="nf">process_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">spider</span><span class="p">:</span> <span class="n">Spider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span><span class="p">:</span>  
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">_process_chain</span><span class="p">(</span><span class="s">"process_item"</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">ItemPipelineManager</code> 클래스가 상속하고 있는 <code class="language-plaintext highlighter-rouge">MiddlewareManager</code> 클래스의 코드는 다음과 같다.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TYPE_CHECKING</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Deque</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">twisted.internet.defer</span> <span class="kn">import</span> <span class="n">Deferred</span>
+
+<span class="kn">from</span> <span class="nn">scrapy</span> <span class="kn">import</span> <span class="n">Spider</span>
+<span class="kn">from</span> <span class="nn">scrapy.exceptions</span> <span class="kn">import</span> <span class="n">NotConfigured</span>
+<span class="kn">from</span> <span class="nn">scrapy.settings</span> <span class="kn">import</span> <span class="n">Settings</span>
+<span class="kn">from</span> <span class="nn">scrapy.utils.defer</span> <span class="kn">import</span> <span class="n">process_chain</span><span class="p">,</span> <span class="n">process_parallel</span>
+<span class="kn">from</span> <span class="nn">scrapy.utils.misc</span> <span class="kn">import</span> <span class="n">create_instance</span><span class="p">,</span> <span class="n">load_object</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="c1"># typing.Self requires Python 3.11
+</span>    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Self</span>
+
+    <span class="kn">from</span> <span class="nn">scrapy.crawler</span> <span class="kn">import</span> <span class="n">Crawler</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="p">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MiddlewareManager</span><span class="p">:</span>
+    <span class="s">"""Base class for implementing middleware managers"""</span>
+
+    <span class="n">component_name</span> <span class="o">=</span> <span class="s">"foo middleware"</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">middlewares</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">middlewares</span> <span class="o">=</span> <span class="n">middlewares</span>
+        <span class="c1"># Only process_spider_output and process_spider_exception can be None.
+</span>        <span class="c1"># Only process_spider_output can be a tuple, and only until _async compatibility methods are removed.
+</span>        <span class="bp">self</span><span class="p">.</span><span class="n">methods</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="n">Deque</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">deque</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mw</span> <span class="ow">in</span> <span class="n">middlewares</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">_add_middleware</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+
+    <span class="o">@</span><span class="nb">classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_mwlist_from_settings</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">Settings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="nb">NotImplementedError</span>
+
+    <span class="o">@</span><span class="nb">classmethod</span>
+    <span class="k">def</span> <span class="nf">from_settings</span><span class="p">(</span>
+        <span class="n">cls</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">Settings</span><span class="p">,</span> <span class="n">crawler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Crawler</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="n">mwlist</span> <span class="o">=</span> <span class="n">cls</span><span class="p">.</span><span class="n">_get_mwlist_from_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+        <span class="n">middlewares</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">enabled</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">clspath</span> <span class="ow">in</span> <span class="n">mwlist</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mwcls</span> <span class="o">=</span> <span class="n">load_object</span><span class="p">(</span><span class="n">clspath</span><span class="p">)</span>
+                <span class="n">mw</span> <span class="o">=</span> <span class="n">create_instance</span><span class="p">(</span><span class="n">mwcls</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">crawler</span><span class="p">)</span>
+                <span class="n">middlewares</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+                <span class="n">enabled</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">clspath</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">NotConfigured</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="p">.</span><span class="n">args</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="p">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s">"Disabled %(clspath)s: %(eargs)s"</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s">"clspath"</span><span class="p">:</span> <span class="n">clspath</span><span class="p">,</span> <span class="s">"eargs"</span><span class="p">:</span> <span class="n">e</span><span class="p">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]},</span>
+                        <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s">"crawler"</span><span class="p">:</span> <span class="n">crawler</span><span class="p">},</span>
+                    <span class="p">)</span>
+
+        <span class="n">logger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s">"Enabled %(componentname)ss:</span><span class="se">\n</span><span class="s">%(enabledlist)s"</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s">"componentname"</span><span class="p">:</span> <span class="n">cls</span><span class="p">.</span><span class="n">component_name</span><span class="p">,</span>
+                <span class="s">"enabledlist"</span><span class="p">:</span> <span class="n">pprint</span><span class="p">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">enabled</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s">"crawler"</span><span class="p">:</span> <span class="n">crawler</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">*</span><span class="n">middlewares</span><span class="p">)</span>
+
+    <span class="o">@</span><span class="nb">classmethod</span>
+    <span class="k">def</span> <span class="nf">from_crawler</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">crawler</span><span class="p">:</span> <span class="n">Crawler</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">.</span><span class="n">from_settings</span><span class="p">(</span><span class="n">crawler</span><span class="p">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">crawler</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_middleware</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mw</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mw</span><span class="p">,</span> <span class="s">"open_spider"</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">methods</span><span class="p">[</span><span class="s">"open_spider"</span><span class="p">].</span><span class="n">append</span><span class="p">(</span><span class="n">mw</span><span class="p">.</span><span class="n">open_spider</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mw</span><span class="p">,</span> <span class="s">"close_spider"</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">methods</span><span class="p">[</span><span class="s">"close_spider"</span><span class="p">].</span><span class="n">appendleft</span><span class="p">(</span><span class="n">mw</span><span class="p">.</span><span class="n">close_spider</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">methodname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span><span class="p">:</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span> <span class="bp">self</span><span class="p">.</span><span class="n">methods</span><span class="p">[</span><span class="n">methodname</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">process_parallel</span><span class="p">(</span><span class="n">methods</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">methodname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span><span class="p">:</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span> <span class="bp">self</span><span class="p">.</span><span class="n">methods</span><span class="p">[</span><span class="n">methodname</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">process_chain</span><span class="p">(</span><span class="n">methods</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">open_spider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spider</span><span class="p">:</span> <span class="n">Spider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">_process_parallel</span><span class="p">(</span><span class="s">"open_spider"</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close_spider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spider</span><span class="p">:</span> <span class="n">Spider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Deferred</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">_process_parallel</span><span class="p">(</span><span class="s">"close_spider"</span><span class="p">,</span> <span class="n">spider</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">MiddlewareManager</code> 클래스의 상속 구조를 도식화 해보면 다음과 같다.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5kaXJlY3Rpb24gVEJcbmNsYXNzIE1pZGRsZXdhcmVNYW5hZ2VyXG5jbGFzcyBEb3dubG9hZGVyTWlkZGxld2FyZU1hbmFnZXJcbmNsYXNzIFNwaWRlck1pZGRsZXdhcmVNYW5hZ2VyXG5jbGFzcyBJdGVtUGlwZWxpbmVNYW5hZ2VyXG5jbGFzcyBFeHRlbnNpb25NYW5hZ2VyXG4lJS1cbk1pZGRsZXdhcmVNYW5hZ2VyIDx8LS0gRG93bmxvYWRlck1pZGRsZXdhcmVNYW5hZ2VyXG5NaWRkbGV3YXJlTWFuYWdlciA8fC0tIFNwaWRlck1pZGRsZXdhcmVNYW5hZ2VyXG5NaWRkbGV3YXJlTWFuYWdlciA8fC0tIEl0ZW1QaXBlbGluZU1hbmFnZXJcbk1pZGRsZXdhcmVNYW5hZ2VyIDx8LS0gRXh0ZW5zaW9uTWFuYWdlclxuJSUtIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0"></p>
+
+<p>내부 구현 로직을 자세하게 분석할 필요는 없지만, 클래스들의 코드 동작을 살펴보면 다음과 같은 기능을 하고 있음을 알 수 있다.</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">MiddlewareManager</code>
+    <ul>
+      <li>미들웨어 기능을 해야 하는 컴포넌트의 뼈대 클래스</li>
+      <li>
+<code class="language-plaintext highlighter-rouge">Settings</code> 객체로부터 자신에게 필요한 미들웨어들을 추출하여 생성하고, 이를 <code class="language-plaintext highlighter-rouge">Twisted</code> 프레임워크를 사용하여 병렬/연쇄적으로 처리하는 기능을 갖추고 있음</li>
+    </ul>
+  </li>
+  <li>
+<code class="language-plaintext highlighter-rouge">ItemPipelineManager</code>
+    <ul>
+      <li>
+<code class="language-plaintext highlighter-rouge">MiddlewareManager</code> 를 상속</li>
+      <li>Item Pipeline 관련된 기능을 처리하는 역할을 수행</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="왜-이렇게-복잡하게-처리가-필요한가">왜 이렇게 복잡하게 처리가 필요한가</h3>
+
+<p>Scrapy 프레임워크를 사용하면서 Item 을 <code class="language-plaintext highlighter-rouge">Yield</code> 하면, 프레임워크가 처리해주는 작업은 여러가지가 있다.</p>
+
+<ol>
+  <li>Item 을 Item Pipeline으로 필터링하는 역할</li>
+  <li>시그널 (이벤트) 처리</li>
+  <li>로깅 처리</li>
+</ol>
+
+<p>이와 관련된 기능은 대부분 Scrapy Engine 과 그 내부에 있는 컴포넌트 (특히, <code class="language-plaintext highlighter-rouge">Scraper</code>) 들을 거쳐 결정된다.<br>
+**따라서, 기존 Scrapy 의 파이프라인 기능을 그대로 사용하려면 Engine 내부에 있는 컴포넌트들을 사용해야 문제 없이 처리가 가능하다.
+**</p>
+
+<p>또한, 이 외에도 Item Pipeline 을 통과한 아이템들은 <code class="language-plaintext highlighter-rouge">ItemExporter</code> 를 거쳐 <code class="language-plaintext highlighter-rouge">FeedSlot</code> 객체에 모이게 되는데, <a href="https://docs.scrapy.org/en/latest/topics/signals.html#scrapy.signals.feed_slot_closed">feed_slot_closed</a> , 와 같은 시그널을 처리하는 시그널 핸들러를 사용하면 수집이 종료된 시점에 최종적인 수집 데이터를 사용하여 API나 이벤트 큐와 통신하는 것들이 매우 용이해진다.
+이런 기능을 그대로 사용하려면, 마찬가지로 수집된 Item 들을 Item Pipeline 을 통하도록 하는 것이 가장 간단하다.
+이를 쉽게 가능하도록 하는 방법은 <code class="language-plaintext highlighter-rouge">Scraper</code> 를 사용하는 것이 현재까지는 가장 적절해 보인다.</p>
+
+<h3 id="사용-예시">사용 예시</h3>
+
+<p>다음과 같은 목표를 가지고 Spider와 Pipeline을 작성해야 한다고 가정해보자.</p>
+
+<ol>
+  <li>특정한 데이터를 수집 시 DB 테이블에 Insert 한다.</li>
+  <li>수집 과정에서 DB에 있는 데이터를 Update 처리한다.</li>
+  <li>수집이 끝난 시점에서 모든 데이터를 DB에서 모두 읽어 Yield 한다.</li>
+</ol>
+
+<p>위의 요구사항을 충족만 하는 최소한의 예시 프로그램을 만들어 본다.</p>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">InsertItem</code> 을 수집 시 DB 테이블에 Insert 처리한다.</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">OverwriteItem</code> 을 수집 시 데이터를 Update 처리한다.</li>
+  <li>수집기는 최종적으로, <code class="language-plaintext highlighter-rouge">FinalItem</code> 만을 수집해야 한다.</li>
+</ol>
+
+<p>간단하게 작성해 본 코드는 다음과 같다. (<code class="language-plaintext highlighter-rouge">SQLAlchemy</code>, <code class="language-plaintext highlighter-rouge">Scrapy</code> 기반)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span> <span class="nn">scrapy</span> <span class="kn">import</span> <span class="n">Spider</span>
+<span class="kn">from</span> <span class="nn">scrapy.exceptions</span> <span class="kn">import</span> <span class="n">DropItem</span>
+<span class="kn">from</span> <span class="nn">scrapy.http</span> <span class="kn">import</span> <span class="n">TextResponse</span>
+<span class="kn">from</span> <span class="nn">scrapy.http.request</span> <span class="kn">import</span> <span class="n">Request</span>
+<span class="kn">from</span> <span class="nn">scrapy.item</span> <span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Item</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">Engine</span><span class="p">,</span> <span class="n">create_engine</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">DeclarativeBase</span><span class="p">,</span> <span class="n">Mapped</span><span class="p">,</span> <span class="n">mapped_column</span><span class="p">,</span> <span class="n">sessionmaker</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.sql.expression</span> <span class="kn">import</span> <span class="n">insert</span><span class="p">,</span> <span class="n">select</span><span class="p">,</span> <span class="n">update</span>
+<span class="kn">from</span> <span class="nn">twisted.internet.defer</span> <span class="kn">import</span> <span class="n">gatherResults</span>
+
+
+<span class="k">class</span> <span class="nc">BaseItem</span><span class="p">(</span><span class="n">Item</span><span class="p">):</span>
+    <span class="n">number</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">InsertItem</span><span class="p">(</span><span class="n">BaseItem</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">OverwriteItem</span><span class="p">(</span><span class="n">BaseItem</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">FinalItem</span><span class="p">(</span><span class="n">BaseItem</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="n">MAX_ITEMS</span> <span class="o">=</span> <span class="mi">20</span>  
+<span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">10</span>
+
+
+<span class="k">class</span> <span class="nc">SchemeBase</span><span class="p">(</span><span class="n">DeclarativeBase</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">TestScheme</span><span class="p">(</span><span class="n">SchemeBase</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">"test"</span>
+
+    <span class="n">number</span><span class="p">:</span> <span class="n">Mapped</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapped_column</span><span class="p">(</span><span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">Mapped</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapped_column</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">TestPipeline</span><span class="p">:</span>
+    <span class="n">engine</span><span class="p">:</span> <span class="n">Engine</span>
+    <span class="n">session_maker</span><span class="p">:</span> <span class="n">sessionmaker</span>
+
+    <span class="k">def</span> <span class="nf">open_spider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spider</span><span class="p">):</span>
+        <span class="s">"""Initialize the database engine and session maker"""</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s">"sqlite:///test.db"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">session_maker</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="p">.</span><span class="n">engine</span><span class="p">)</span>
+
+        <span class="n">SchemeBase</span><span class="p">.</span><span class="n">metadata</span><span class="p">.</span><span class="n">create_all</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">engine</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">process_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">spider</span><span class="p">):</span>
+        <span class="s">"""Insert or update the item in the database"""</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="p">.</span><span class="n">session_maker</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">InsertItem</span><span class="p">):</span>
+                <span class="n">session</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="n">insert</span><span class="p">(</span><span class="n">TestScheme</span><span class="p">).</span><span class="n">values</span><span class="p">(</span>
+                        <span class="n">number</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s">"number"</span><span class="p">],</span>
+                        <span class="n">status</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s">"status"</span><span class="p">],</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">session</span><span class="p">.</span><span class="n">commit</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="n">DropItem</span><span class="p">(</span><span class="sa">f</span><span class="s">"Inserted item </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s">'number'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">OverwriteItem</span><span class="p">):</span>
+                <span class="n">session</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="n">update</span><span class="p">(</span><span class="n">TestScheme</span><span class="p">)</span>
+                    <span class="p">.</span><span class="n">where</span><span class="p">(</span><span class="n">TestScheme</span><span class="p">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">item</span><span class="p">[</span><span class="s">"number"</span><span class="p">])</span>
+                    <span class="p">.</span><span class="n">values</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s">"status"</span><span class="p">]),</span>
+                <span class="p">)</span>
+                <span class="n">session</span><span class="p">.</span><span class="n">commit</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="n">DropItem</span><span class="p">(</span><span class="sa">f</span><span class="s">"Overwritten item </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s">'number'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">item</span>
+
+    <span class="k">def</span> <span class="nf">close_spider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spider</span><span class="p">):</span>
+        <span class="s">"""
+        Read all items from the database and convert them to FinalItem,
+        then pass them to pipeline for further processing
+        """</span>
+
+        <span class="n">dfd_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">MAX_ITEMS</span><span class="p">,</span> <span class="n">BATCH_SIZE</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="p">.</span><span class="n">session_maker</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+                <span class="n">items</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">session</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span>
+                        <span class="n">select</span><span class="p">(</span><span class="n">TestScheme</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">TestScheme</span><span class="p">.</span><span class="n">number</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">offset</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                        <span class="p">.</span><span class="n">limit</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">),</span>
+                    <span class="p">)</span>
+                    <span class="p">.</span><span class="n">scalars</span><span class="p">()</span>
+                    <span class="p">.</span><span class="nb">all</span><span class="p">()</span>
+                <span class="p">)</span>
+
+            <span class="n">conv_items</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">FinalItem</span><span class="p">(</span>
+                    <span class="n">number</span><span class="o">=</span><span class="n">item</span><span class="p">.</span><span class="n">number</span><span class="p">,</span>
+                    <span class="n">status</span><span class="o">=</span><span class="s">"final"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span>
+            <span class="p">]</span>
+            <span class="n">cb_dfd</span> <span class="o">=</span> <span class="n">spider</span><span class="p">.</span><span class="n">crawler</span><span class="p">.</span><span class="n">engine</span><span class="p">.</span><span class="n">scraper</span><span class="p">.</span><span class="n">handle_spider_output</span><span class="p">(</span>
+                <span class="n">conv_items</span><span class="p">,</span>
+                <span class="bp">None</span><span class="p">,</span>
+                <span class="bp">None</span><span class="p">,</span>
+                <span class="n">spider</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">dfd_list</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">cb_dfd</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gatherResults</span><span class="p">(</span><span class="n">dfd_list</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">TestSpider</span><span class="p">(</span><span class="n">Spider</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">"test_spider"</span>
+    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">"http://example.com"</span><span class="p">]</span>
+
+    <span class="n">custom_settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">"ITEM_PIPELINES"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">TestPipeline</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s">"FEEDS"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">"test.jl"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">"format"</span><span class="p">:</span> <span class="s">"jsonlines"</span><span class="p">,</span>
+                <span class="s">"overwrite"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s">"DOWNLOAD_DELAY"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>  <span class="c1"># prevent ddos
+</span>    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">response</span><span class="p">:</span> <span class="n">TextResponse</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Item</span> <span class="o">|</span> <span class="n">Request</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">MAX_ITEMS</span><span class="p">,</span> <span class="n">BATCH_SIZE</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">BATCH_SIZE</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">InsertItem</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">"number"</span><span class="p">:</span> <span class="n">j</span><span class="p">,</span> <span class="s">"status"</span><span class="p">:</span> <span class="s">"insert"</span><span class="p">})</span>
+
+            <span class="k">yield</span> <span class="n">Request</span><span class="p">(</span>
+                <span class="n">url</span><span class="o">=</span><span class="s">"http://example.com"</span><span class="p">,</span>
+                <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="p">.</span><span class="n">overwrite</span><span class="p">,</span>
+                <span class="n">cb_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">"number"</span><span class="p">:</span> <span class="n">i</span><span class="p">},</span>
+                <span class="n">dont_filter</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">TextResponse</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Item</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">number</span> <span class="o">+</span> <span class="n">BATCH_SIZE</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">OverwriteItem</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">"number"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s">"status"</span><span class="p">:</span> <span class="s">"overwrite"</span><span class="p">})</span>
+
+</code></pre></div></div>
+
+<p>각 컴포넌트 별로 수행하는 기능은 다음과 같다.</p>
+
+<ul>
+  <li>Spider (<code class="language-plaintext highlighter-rouge">TestSpider</code>)
+    <ul>
+      <li>Request 또는 Item 을 Yield 하는 역할만 수행</li>
+    </ul>
+  </li>
+  <li>Item Pipeline (<code class="language-plaintext highlighter-rouge">TestPipeline</code>)
+    <ul>
+      <li>DB (<code class="language-plaintext highlighter-rouge">SQLAlchemy</code> 기반의 <code class="language-plaintext highlighter-rouge">SQLite</code> 엔진, 세션) 관리</li>
+      <li>Item 유형에 따라 분기 처리
+        <ul>
+          <li>
+<code class="language-plaintext highlighter-rouge">InsertItem</code> 인 경우 Insert 후 Item Drop</li>
+          <li>
+<code class="language-plaintext highlighter-rouge">OverwriteItem</code> 인 경우 Update 후 Item Drop</li>
+          <li>그 외의 경우 item return</li>
+        </ul>
+      </li>
+      <li>
+<code class="language-plaintext highlighter-rouge">close_spider</code> 호출 시 DB 에 저장한 데이터를 모두 파이프라인으로 전송</li>
+    </ul>
+  </li>
+</ul>
+
+<p><code class="language-plaintext highlighter-rouge">runspider</code> 등의 명령어로 실행 시 다음과 같이 로그가 남는다.</p>
+
+<pre><code class="language-log">2024-06-13 02:37:55 [scrapy.utils.log] INFO: Scrapy 2.11.2 started (bot: scrapybot)
+2024-06-13 02:37:55 [scrapy.utils.log] INFO: Versions: lxml 5.2.2.0, libxml2 2.12.6, cssselect 1.2.0, parsel 1.9.1, w3lib 2.2.0, Twisted 24.3.0, Python 3.11.9 (main, Apr 15 2024, 18:24:23) [Clang 17.0.6 ], pyOpenSSL 24.1.0 (OpenSSL 3.2.2 4 Jun 2024), cryptography 42.0.8, Platform Linux-5.15.0-102-generic-x86_64-with-glibc2.35
+2024-06-13 02:37:55 [scrapy.addons] INFO: Enabled addons:
+[]
+2024-06-13 02:37:55 [scrapy.utils.log] DEBUG: Using reactor: twisted.internet.epollreactor.EPollReactor
+2024-06-13 02:37:55 [scrapy.extensions.telnet] INFO: Telnet Password: c1ff0f3b318422a0
+2024-06-13 02:37:55 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.feedexport.FeedExporter',
+ 'scrapy.extensions.logstats.LogStats']
+2024-06-13 02:37:55 [scrapy.crawler] INFO: Overridden settings:
+{'DOWNLOAD_DELAY': 2,
+ 'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+ 'SPIDER_LOADER_WARN_ONLY': True}
+2024-06-13 02:37:55 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2024-06-13 02:37:55 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+2024-06-13 02:37:55 [scrapy.middleware] INFO: Enabled item pipelines:
+[&lt;class 'test_spider.TestPipeline'&gt;]
+2024-06-13 02:37:55 [scrapy.core.engine] INFO: Spider opened
+2024-06-13 02:37:55 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+2024-06-13 02:37:55 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6023
+2024-06-13 02:37:56 [scrapy.core.engine] DEBUG: Crawled (200) &lt;GET http://example.com&gt; (referer: None)
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 0
+{'number': 0, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 1
+{'number': 1, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 2
+{'number': 2, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 3
+{'number': 3, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 4
+{'number': 4, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 5
+{'number': 5, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 6
+{'number': 6, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 7
+{'number': 7, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 8
+{'number': 8, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 9
+{'number': 9, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 10
+{'number': 10, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 11
+{'number': 11, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 12
+{'number': 12, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 13
+{'number': 13, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 14
+{'number': 14, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 15
+{'number': 15, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 16
+{'number': 16, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 17
+{'number': 17, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 18
+{'number': 18, 'status': 'insert'}
+2024-06-13 02:37:56 [scrapy.core.scraper] WARNING: Dropped: Inserted item 19
+{'number': 19, 'status': 'insert'}
+2024-06-13 02:37:57 [scrapy.core.engine] DEBUG: Crawled (200) &lt;GET http://example.com&gt; (referer: http://example.com)
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 0
+{'number': 0, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 1
+{'number': 1, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 2
+{'number': 2, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 3
+{'number': 3, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 4
+{'number': 4, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 5
+{'number': 5, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 6
+{'number': 6, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 7
+{'number': 7, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 8
+{'number': 8, 'status': 'overwrite'}
+2024-06-13 02:37:57 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 9
+{'number': 9, 'status': 'overwrite'}
+2024-06-13 02:37:58 [scrapy.core.engine] DEBUG: Crawled (200) &lt;GET http://example.com&gt; (referer: http://example.com)
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 10
+{'number': 10, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 11
+{'number': 11, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 12
+{'number': 12, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 13
+{'number': 13, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 14
+{'number': 14, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 15
+{'number': 15, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 16
+{'number': 16, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 17
+{'number': 17, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 18
+{'number': 18, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.scraper] WARNING: Dropped: Overwritten item 19
+{'number': 19, 'status': 'overwrite'}
+2024-06-13 02:37:59 [scrapy.core.engine] INFO: Closing spider (finished)
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 0, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 1, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 2, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 3, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 4, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 5, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 6, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 7, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 8, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 9, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 10, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 11, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 12, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 13, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 14, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 15, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 16, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 17, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 18, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.core.scraper] DEBUG: Scraped from None
+{'number': 19, 'status': 'final'}
+2024-06-13 02:37:59 [scrapy.extensions.feedexport] INFO: Stored jsonlines feed (20 items) in: test.jl
+2024-06-13 02:37:59 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
+{'downloader/request_bytes': 694,
+ 'downloader/request_count': 3,
+ 'downloader/request_method_count/GET': 3,
+ 'downloader/response_bytes': 3021,
+ 'downloader/response_count': 3,
+ 'downloader/response_status_count/200': 3,
+ 'elapsed_time_seconds': 3.365235,
+ 'feedexport/success_count/FileFeedStorage': 1,
+ 'finish_reason': 'finished',
+ 'finish_time': datetime.datetime(2024, 6, 12, 17, 37, 59, 91639, tzinfo=datetime.timezone.utc),
+ 'httpcompression/response_bytes': 3768,
+ 'httpcompression/response_count': 3,
+ 'item_dropped_count': 40,
+ 'item_dropped_reasons_count/DropItem': 40,
+ 'item_scraped_count': 20,
+ 'log_count/DEBUG': 24,
+ 'log_count/INFO': 11,
+ 'log_count/WARNING': 40,
+ 'memusage/max': 8797593600,
+ 'memusage/startup': 8797593600,
+ 'request_depth_max': 1,
+ 'response_received_count': 3,
+ 'scheduler/dequeued': 3,
+ 'scheduler/dequeued/memory': 3,
+ 'scheduler/enqueued': 3,
+ 'scheduler/enqueued/memory': 3,
+ 'start_time': datetime.datetime(2024, 6, 12, 17, 37, 55, 726404, tzinfo=datetime.timezone.utc)}
+2024-06-13 02:37:59 [scrapy.core.engine] INFO: Spider closed (finished)
+
+</code></pre>
+
+<p>수집된 <code class="language-plaintext highlighter-rouge">jsonlines</code> 파일의 결과를 살펴보면 다음과 같다.</p>
+
+<pre><code class="language-jsonlines">{"number": 0, "status": "final"}  
+{"number": 1, "status": "final"}  
+{"number": 2, "status": "final"}  
+{"number": 3, "status": "final"}  
+{"number": 4, "status": "final"}  
+{"number": 5, "status": "final"}  
+{"number": 6, "status": "final"}  
+{"number": 7, "status": "final"}  
+{"number": 8, "status": "final"}  
+{"number": 9, "status": "final"}  
+{"number": 10, "status": "final"}  
+{"number": 11, "status": "final"}  
+{"number": 12, "status": "final"}  
+{"number": 13, "status": "final"}  
+{"number": 14, "status": "final"}  
+{"number": 15, "status": "final"}  
+{"number": 16, "status": "final"}  
+{"number": 17, "status": "final"}  
+{"number": 18, "status": "final"}  
+{"number": 19, "status": "final"}
+</code></pre>
+
+<p>우리가 원하던 최종 상태의 Item 만을 수집하는 것을 볼 수 있다.</p>
+
+<h2 id="결론">결론</h2>
+
+<ul>
+  <li>Scrapy 에서 수집 종료 시점(<code class="language-plaintext highlighter-rouge">spider_closed</code> 시그널이 트리거 된 후) 에는 Item 을 <code class="language-plaintext highlighter-rouge">Yield</code> 할 수 없다.
+    <ul>
+      <li>수집 종료 시점에 이를 처리하고자 한다면, <code class="language-plaintext highlighter-rouge">Engine</code> 내부에 숨겨져 있는 <code class="language-plaintext highlighter-rouge">Scraper</code> 클래스를 통해 이를 처리할 수 있다.
+        <ul>
+          <li>
+<code class="language-plaintext highlighter-rouge">Spider</code> 를 기반으로 이를 하고자 한다면 <code class="language-plaintext highlighter-rouge">spider.crawler.engine.scraper.handle_spider_output</code> 을 Item 목록에 적용하고, 적용된 <code class="language-plaintext highlighter-rouge">Deferred</code> 객체를 반환하면 된다.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+<code class="language-plaintext highlighter-rouge">Scraper</code> 클래스가 Item Pipeline 과 관련된 전반적인 생애 주기를 담당한다.
+    <ul>
+      <li>
+<code class="language-plaintext highlighter-rouge">Scraper</code> 클래스는 <code class="language-plaintext highlighter-rouge">ItemPipelineManager</code> 클래스를 사용하여 아이템 파이프라인과 Spider 에서 <code class="language-plaintext highlighter-rouge">Yield</code> 처리 된 Item 의 핸들링까지 모두 처리한다.</li>
+    </ul>
+  </li>
+  <li>기존 컴포넌트, 시그널 핸들러, <code class="language-plaintext highlighter-rouge">Feed Exports</code> 와 관련된 기능을 사용하면서 Item 처리를 하려는 경우 Item Pipeline 을 거쳐야 하며, 이 또한 <code class="language-plaintext highlighter-rouge">Scraper</code> 클래스를 사용하여 처리할 수 있다.</li>
+</ul>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/history/reference/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4.html" title="만났던 개발 레퍼런스">만났던 개발 레퍼런스</a><span></span>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/spring/redis/2023/03/14/Spring-Redis-Key-Expire-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%ED%99%9C%EC%9A%A9.html" title="">Spring Redis Key Expire 이벤트 활용</a></li>
+<li><a class="post-link" href="/scrapy/2024/06/12/Scrapy%EB%8A%94-%EC%A2%85%EB%A3%8C-%EC%8B%9C%EC%A0%90%EC%97%90-Item%EC%9D%84-Yield-%ED%95%A0-%EC%88%98-%EC%97%86%EB%8A%94%EA%B0%80.html" title="">Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가</a></li>
+<li><a class="post-link" href="/linux/kime/2023/03/14/Kime.html" title="">Kime</a></li>
+<li><a class="post-link" href="/history/reference/2024/04/22/%EB%A7%8C%EB%82%AC%EB%8D%98-%EA%B0%9C%EB%B0%9C-%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4.html" title="">만났던 개발 레퍼런스</a></li>
+</ul>
+    </div>
+<div class="post-comments">
+<div id="utterances-placeholder"></div>
+<script>
+  const utterancesThemeFromDataTheme = () => {
+    const dataTheme = document.documentElement.getAttribute('data-theme');
+    return `github-${dataTheme}`;
+  };
+
+  const setUtterancesTheme = () => {
+    const iframe = document.querySelector('.utterances-frame');
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: utterancesThemeFromDataTheme()
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es');
+    }
+  }
+
+  // dynamic change
+  const observer = new MutationObserver((mutationsList, observer) => {
+    for (let mutation of mutationsList) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+        setUtterancesTheme();
+      }
+    }
+  });
+  observer.observe(document.documentElement, { attributes: true, childList: false, subtree: false });
+
+  let utterancesScript = document.createElement('script');
+  utterancesScript.async = true;
+  utterancesScript.src = 'https://utteranc.es/client.js';
+  utterancesScript.crossOrigin = 'anonymous';
+  utterancesScript.setAttribute('issue-term', 'title');
+  utterancesScript.setAttribute('label', 'utterances comment');
+  utterancesScript.setAttribute('repo', 'cda2/blog_comments');
+  utterancesScript.setAttribute('theme', utterancesThemeFromDataTheme());
+
+  const placeholder = document.getElementById('utterances-placeholder');
+  placeholder.parentNode.replaceChild(utterancesScript, placeholder);
+</script>
+</div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>Copyright © 2024 <a href="https://github.com/cda2">cda2</a>
+</div>
+      <div>Powered by <a title="Jekyll is a simple, blog-aware, static site
+      generator." href="https://jekyllrb.com/">Jekyll</a> &amp; <a title="Yat, yet
+      another theme." href="https://github.com/jeffreytse/jekyll-theme-yat">Yat Theme</a>.</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
