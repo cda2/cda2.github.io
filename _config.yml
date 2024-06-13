@@ -1,0 +1,274 @@
+title: cda2
+email: qq23667@gmail.com
+author: cda2
+description: >- # this means to ignore newlines until "baseurl:"
+  삽질 기록 일지
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://cda2.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+github_username: cda2
+
+# Build settings
+theme: jekyll-theme-yat
+plugins:
+  - jekyll-feed
+  - jekyll-paginate
+  - jekyll-spaceship
+
+favicon: "" # the favicon for your site
+
+markdown: kramdown
+kramdown:
+  input: GFM
+
+# Yat date format
+# refer to https://shopify.github.io/liquid/filters/date/ if you want to customize this
+yat:
+  date_format: "%Y-%m-%d"
+
+# If you want more debug log, you can set true
+# debug: false
+
+# If you don't want transparent header, you can set false
+header_transparent: true
+
+# If you want to change the content width, you can set to another value
+content_width: "1080px"
+
+# Google analytics - GA4
+# google_analytics: [Measurement ID]
+# enableDNT: "false"
+
+# If you want to generate website sitemap, you can set true
+# sitemap: true
+
+# If you want to change site language, you can set lang option
+lang: "ko"  # default lang is en
+
+# Translate languges
+# langs refer to https://cloud.google.com/translate/docs/languages
+#translate_langs:
+#  - lang: en
+#    img: https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png
+#    text: English
+#
+#  - lang: fr
+#    img: https://cdn.countryflags.com/thumbs/france/flag-400.png
+#    text: French
+#
+#  - lang: zh-CN
+#    img: https://cdn.countryflags.com/thumbs/china/flag-400.png
+#    text: Chinese(Simple)
+#
+#  - lang: ja
+#    img: https://cdn.countryflags.com/thumbs/japan/flag-400.png
+#    text: Japanese
+#
+#  - lang: ko
+#    img: https://cdn.countryflags.com/thumbs/south-korea/flag-400.png
+#    text: Korean
+#
+#  - lang: ru
+#    img: https://cdn.countryflags.com/thumbs/russia/flag-400.png
+#    text: Russian
+
+# You can choose a theme color
+# Default theme colors as below:
+# coolblack: #090a0b
+# spacegrey: #353535
+# snowwhite: #ffffff
+#
+# theme_color: snowwhite
+#
+# Custom color as below:
+# theme_color: "#882250"
+
+# You can choose a brand color
+# Default brand colors as below:
+# orangered: #ff5100
+# greatgold: #f2cb05
+# greenblue: #389092
+#
+# brand_color: orangered
+#
+# Custom color as below:
+# brand_color: "#1a8e42"
+
+# You can custom selection style
+# selection:
+#   color: "#ff00ff"
+#   background_color: "yellow"
+copyright: "Copyright (c) 2024 <a href='https://github.com/cda2'>{author}</a>"
+
+# Night/Dark mode
+# Default mode is "auto", "auto" is for auto nightshift
+# (19:00 - 07:00), "manual" is for manual toggle, and
+# "on/off" is for default on/off.
+#
+# Whatever the user's choice is, it will supersede the
+# default setting of the site and be kept during the
+# visit (session). Only the dark mode setting is"manual",
+# it will be always kept on every visit (i.e. no matter
+# the browser is closed or not)
+#
+#night_mode: "auto"
+
+# Code badge setting
+# You can enable or disable the code badge and so on
+code_badge:
+  enabled: "true"
+  color: "#fff"
+  background_color: "#ff4e00"
+  text_transform: "capitalize"  # ("uppercase", "lowercase", "capitalize")
+
+# If you want to link only specific pages in your header, uncomment
+# this and add the path to the pages in order as they should show up
+#header_pages:
+#  - index.html
+#  - archives.html
+#  - categories.html
+#  - tags.html
+#  - articles.html
+#  - about.md
+
+# Page default value
+#defaults:
+#  home:
+#    heading: "Hmm"
+#    subheading: "Your awesome subheading"
+#    banner: "Your image url"
+
+# Banner default settings
+# These banner settings are for global banner default, but you can also
+# config it by the front matter for one specific post
+# banner:
+#   video: null             # Video banner source
+#   loop: true              # Video loop
+#   volume: 0               # Video volume (100% is 1.0)
+#   start_at: 0             # Video start time
+#   image: null             # Image banner source
+#   opacity: 1.0            # Banner opacity (100% is 1.0)
+#   background: "rgba(0, 0, 0, 0.8)"  # Banner background (Could be a image)
+#   height: "640px"         # Banner default height
+#   min_height: null        # Banner minimum height
+#   heading_style: null     # Custom heading style (e.g. "font-weight: bold; text-decoration: underline")
+#   subheading_style: null  # Custom subheading style (e.g. color: gold)
+
+# Excerpt settings
+# excerpt:
+#   default_image: /assets/images/default-image.jpeg  # Default image when the image style is not none
+#   image_style: z          # Image layout style (It's value could be none, left, right, top, z, z-reverse)
+#   image_width: 38.2%      # Image default width
+#   image_height: 160px     # Image default height
+#   text_size: 350          # Words default size
+
+# Pagination setting
+paginate: 5
+
+# Photo previewer settings (PhotoSwipe 5)
+# the options please refer to: https://photoswipe.com/options/
+photo_previewer:
+  gallery: "section.main"
+  children: "a.photo-swipe"
+  bgOpacity: 0.8
+  padding:
+    top: 20
+    bottom: 40
+    left: 100
+    right: 100
+# Click to top settings
+click_to_top:
+  light:
+    background_color: "white"
+    color: "#454545"
+  dark:
+    background_color: "#34323d"
+    color: "#bbb"
+
+# Disqus comments
+# disqus:
+#   shortname: "Your Disqus username"
+
+# Gitment comments
+# gitment:
+#   username: "Your GitHub username"
+#   repo: "The repo to store comments"
+#   client_id: "Your client ID"
+#   client_secret: "Your client secret"
+#   redirect_uri: "Your redirect url"   # If you use a custom domain name
+
+# Utterances comments
+# See https://utteranc.es/
+# set follow_site_theme true to make utterances' theme follow the site's
+
+utterances:
+  repo: "cda2/blog_comments"
+  issue_term: "title"
+  label: "utterances comment"
+  theme: "github-light"
+  follow_site_theme: true
+
+# Build settings
+#highlighter: rouge
+
+
+# Where things are
+jekyll-spaceship:
+  # default enabled processors
+  processors:
+    - table-processor
+    - mathjax-processor
+    - plantuml-processor
+    - mermaid-processor
+    - polyfill-processor
+    - media-processor
+    - emoji-processor
+    - element-processor
+  mathjax-processor:
+    src:
+      - https://polyfill.io/v3/polyfill.min.js?features=es6
+      - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+    config:
+      tex:
+        inlineMath:
+          - [ '$','$' ]
+          - [ '\(','\)' ]
+        displayMath:
+          - [ '$$','$$' ]
+          - [ '\[','\]' ]
+      svg:
+        fontCache: 'global'
+    optimize: # optimization on building stage to check and add mathjax scripts
+      enabled: true # value `false` for adding to all pages
+      include: [ ]   # include patterns for math expressions checking (regexp)
+      exclude: [ ]   # exclude patterns for math expressions checking (regexp)
+  plantuml-processor:
+    mode: default  # mode value 'pre-fetch' for fetching image at building stage
+    css:
+      class: plantuml
+    syntax:
+      code: 'plantuml'
+      custom: [ '@startuml', '@enduml' ]
+    src: http://www.plantuml.com/plantuml/svg/
+  mermaid-processor:
+    mode: pre-fetch  # mode value 'pre-fetch' for fetching image at building stage
+    css:
+      class: mermaid
+    syntax:
+      code: 'mermaid'
+      custom: [ '@startmermaid', '@endmermaid' ]
+    config:
+      theme: default
+    src: https://mermaid.ink/svg/
+  media-processor:
+    default:
+      id: 'media-{id}'
+      class: 'media'
+      width: '100%'
+      height: 350
+      frameborder: 0
+      style: 'max-width: 600px; outline: none;'
+      allow: 'encrypted-media; picture-in-picture'
+  emoji-processor:
+    css:
+      class: emoji
+    src: https://github.githubassets.com/images/icons/emoji/
