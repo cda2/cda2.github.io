@@ -329,7 +329,7 @@ class MiddlewareManager:
 
 `MiddlewareManager` 클래스의 상속 구조를 도식화 해보면 다음과 같다.
 
-~~~mermaid
+```mermaid
 classDiagram
 direction TB
 class MiddlewareManager
@@ -343,7 +343,7 @@ MiddlewareManager  <|--  SpiderMiddlewareManager
 MiddlewareManager  <|--  ItemPipelineManager 
 MiddlewareManager  <|--  ExtensionManager 
 
-~~~
+```
 
 
 내부 구현 로직을 자세하게 분석할 필요는 없지만, 클래스들의 코드 동작을 살펴보면 다음과 같은 기능을 하고 있음을 알 수 있다.
