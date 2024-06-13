@@ -1,25 +1,32 @@
 ---
 layout: post
-title:  "Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가"
-date:   2024-06-13 01:10:51 +0900
-categories: [Scrapy]
+title: "Scrapy는 종료 시점에 Item 을 Yield 할 수 없는가"
+date: 2024-06-13 01:10:51 +0900
+categories: [ Scrapy ]
 ---
 
 ## 개요
+
 `Scrapy` 프레임워크는 특성 상 종료 시점에 `Item` 을 `Yield` 할 수 없는데, 간단한 우회법으로 이를 가능하게 해본다.
 
 ## TL;DR
-최소 두 가지 기능을 사용하면 **상당히 지저분하지만** 아키텍처나 Scrapy의 기본 구조를 뒤집어 엎지 않고도 종료 시점에 `Item`을 `Yield` 처리 할 수 있다.
+
+최소 두 가지 기능을 사용하면 **상당히 지저분하지만
+** 아키텍처나 Scrapy의 기본 구조를 뒤집어 엎지 않고도 종료 시점에 `Item`을 `Yield` 처리 할 수 있다.
+
 1. `Scrapy` 프레임워크 내부에 있는 [Scraper](https://github.com/scrapy/scrapy/blob/1282ddf8f77299edf613679c2ee0b606e96808ce/scrapy/core/scraper.py#L110) 를 사용할 것
 2. `Twisted` 의 [Deferred](https://docs.twisted.org/en/stable/core/howto/defer.html) 객체를 사용하여 Signal 기반으로 처리할 것
 
 여러가지 방법이 있지만, 위의 절차를 가장 쉽고 빠르게 적용할 수 있는 방법은 다음과 같다.
+
 1. Scraper 클래스의 [`handle_spider_output`](https://github.com/scrapy/scrapy/blob/1282ddf8f77299edf613679c2ee0b606e96808ce/scrapy/core/scraper.py#L272-L308) 메서드를 적용한다.
 2. 적용한 결과는 `Deferred` 객체이므로 이를 시그널 처리가 가능한 메서드 단에서 반환한다.
+
 - `close_spider` 메서드는 `Deferred` 기반의 시그널 처리를 지원한다.
 - `from_crawler` 등에서 시그널 연결을 기본적으로 지원하므로, 구현하기 편리하다.
 
 간단한 단 건 처리 예시를 작성해보면 다음과 같다.
+
 ```python
 	...
 	def close_spider(self, spider) -> Deferred
@@ -33,6 +40,7 @@ categories: [Scrapy]
 ```
 
 여러 건을 한 번에 처리해야 하는 케이스를 작성해보면 다음과 같다.
+
 ```python
 	...
 	def close_spider(self, spider) -> Deferred
@@ -46,6 +54,7 @@ categories: [Scrapy]
 ```
 
 여러 건을 나누어서 (페이징 등) 처리해야 하는 케이스를 작성해보면 다음과 같다.
+
 - 원격 DB 를 사용하고 있어, 데이터베이스에 부하를 줄이려는 목적 등의 경우 사용
 
 ```python
@@ -146,6 +155,7 @@ from twisted.internet.defer import gatherResults
 
 두 메서드를 좀 살펴보면, `itemproc` 변수에게 많은 것을 위임하고 있는 것을 알 수 있다. `itemproc` 은 `Item Processor` 의 약자이다.
 이에 대해서 너무 깊이 들여다 볼 필요는 없지만, 적어도 `itemproc`이 무슨 역할을 수행하는지 정도는 알아야 한다.
+
 ### Item Processor
 
 다시 `Scraper` 클래스로 돌아가보자. 생성자 메서드를 보면 다음과 같이 정의되어 있다.
@@ -169,6 +179,7 @@ class Scraper:
 ```
 
 살펴보면 `itemproc` 필드는 다음과 같이 생성됨을 알 수 있다.
+
 1. `Settings` 객체로부터 `ITEM_PROCESSOR` 설정 값을 추출
 2. 추출한 클래스 객체를 `from_crawler` 메서드를 호출하여 인스턴스로 만든 후, 인스턴스 변수에 저장
 
@@ -331,51 +342,55 @@ class MiddlewareManager:
 
 ```mermaid
 classDiagram
-direction TB
-class MiddlewareManager
-class DownloaderMiddlewareManager
-class SpiderMiddlewareManager
-class ItemPipelineManager
-class ExtensionManager
+    direction TB
+    class MiddlewareManager
+    class DownloaderMiddlewareManager
+    class SpiderMiddlewareManager
+    class ItemPipelineManager
+    class ExtensionManager
 
-MiddlewareManager  <|--  DownloaderMiddlewareManager 
-MiddlewareManager  <|--  SpiderMiddlewareManager 
-MiddlewareManager  <|--  ItemPipelineManager 
-MiddlewareManager  <|--  ExtensionManager 
+    MiddlewareManager <|-- DownloaderMiddlewareManager
+    MiddlewareManager <|-- SpiderMiddlewareManager
+    MiddlewareManager <|-- ItemPipelineManager
+    MiddlewareManager <|-- ExtensionManager
 
 ```
-
 
 내부 구현 로직을 자세하게 분석할 필요는 없지만, 클래스들의 코드 동작을 살펴보면 다음과 같은 기능을 하고 있음을 알 수 있다.
 
 - `MiddlewareManager`
-  - 미들웨어 기능을 해야 하는 컴포넌트의 뼈대 클래스
-  - `Settings` 객체로부터 자신에게 필요한 미들웨어들을 추출하여 생성하고, 이를 `Twisted` 프레임워크를 사용하여 병렬/연쇄적으로 처리하는 기능을 갖추고 있음
+    - 미들웨어 기능을 해야 하는 컴포넌트의 뼈대 클래스
+    - `Settings` 객체로부터 자신에게 필요한 미들웨어들을 추출하여 생성하고, 이를 `Twisted` 프레임워크를 사용하여 병렬/연쇄적으로 처리하는 기능을 갖추고 있음
 - `ItemPipelineManager`
-  - `MiddlewareManager` 를 상속
-  - Item Pipeline 관련된 기능을 처리하는 역할을 수행
+    - `MiddlewareManager` 를 상속
+    - Item Pipeline 관련된 기능을 처리하는 역할을 수행
 
 ### 왜 이렇게 복잡하게 처리가 필요한가
 
 Scrapy 프레임워크를 사용하면서 Item 을 `Yield` 하면, 프레임워크가 처리해주는 작업은 여러가지가 있다.
+
 1. Item 을 Item Pipeline으로 필터링하는 역할
 2. 시그널 (이벤트) 처리
 3. 로깅 처리
 
 이와 관련된 기능은 대부분 Scrapy Engine 과 그 내부에 있는 컴포넌트 (특히, `Scraper`) 들을 거쳐 결정된다.  
-**따라서, 기존 Scrapy 의 파이프라인 기능을 그대로 사용하려면 Engine 내부에 있는 컴포넌트들을 사용해야 문제 없이 처리가 가능하다.**
+**따라서, 기존 Scrapy 의 파이프라인 기능을 그대로 사용하려면 Engine 내부에 있는 컴포넌트들을 사용해야 문제 없이 처리가 가능하다.
+**
 
 또한, 이 외에도 Item Pipeline 을 통과한 아이템들은 `ItemExporter` 를 거쳐 `FeedSlot` 객체에 모이게 되는데, [feed_slot_closed](https://docs.scrapy.org/en/latest/topics/signals.html#scrapy.signals.feed_slot_closed) , 와 같은 시그널을 처리하는 시그널 핸들러를 사용하면 수집이 종료된 시점에 최종적인 수집 데이터를 사용하여 API나 이벤트 큐와 통신하는 것들이 매우 용이해진다.
 이런 기능을 그대로 사용하려면, 마찬가지로 수집된 Item 들을 Item Pipeline 을 통하도록 하는 것이 가장 간단하다.
 이를 쉽게 가능하도록 하는 방법은 `Scraper` 를 사용하는 것이 현재까지는 가장 적절해 보인다.
 
 ### 사용 예시
+
 다음과 같은 목표를 가지고 Spider와 Pipeline을 작성해야 한다고 가정해보자.
+
 1. 특정한 데이터를 수집 시 DB 테이블에 Insert 한다.
 2. 수집 과정에서 DB에 있는 데이터를 Update 처리한다.
 3. 수집이 끝난 시점에서 모든 데이터를 DB에서 모두 읽어 Yield 한다.
 
 위의 요구사항을 충족만 하는 최소한의 예시 프로그램을 만들어 본다.
+
 1. `InsertItem` 을 수집 시 DB 테이블에 Insert 처리한다.
 2. `OverwriteItem` 을 수집 시 데이터를 Update 처리한다.
 3. 수집기는 최종적으로, `FinalItem` 만을 수집해야 한다.
@@ -545,14 +560,14 @@ class TestSpider(Spider):
 각 컴포넌트 별로 수행하는 기능은 다음과 같다.
 
 - Spider (`TestSpider`)
-  - Request 또는 Item 을 Yield 하는 역할만 수행
+    - Request 또는 Item 을 Yield 하는 역할만 수행
 - Item Pipeline (`TestPipeline`)
-  - DB (`SQLAlchemy` 기반의 `SQLite` 엔진, 세션) 관리
-  - Item 유형에 따라 분기 처리
-    - `InsertItem` 인 경우 Insert 후 Item Drop
-    - `OverwriteItem` 인 경우 Update 후 Item Drop
-    - 그 외의 경우 item return
-  - `close_spider` 호출 시 DB 에 저장한 데이터를 모두 파이프라인으로 전송
+    - DB (`SQLAlchemy` 기반의 `SQLite` 엔진, 세션) 관리
+    - Item 유형에 따라 분기 처리
+        - `InsertItem` 인 경우 Insert 후 Item Drop
+        - `OverwriteItem` 인 경우 Update 후 Item Drop
+        - 그 외의 경우 item return
+    - `close_spider` 호출 시 DB 에 저장한 데이터를 모두 파이프라인으로 전송
 
 `runspider` 등의 명령어로 실행 시 다음과 같이 로그가 남는다.
 
@@ -781,9 +796,10 @@ class TestSpider(Spider):
 우리가 원하던 최종 상태의 Item 만을 수집하는 것을 볼 수 있다.
 
 ## 결론
+
 - Scrapy 에서 수집 종료 시점(`spider_closed` 시그널이 트리거 된 후) 에는 Item 을 `Yield` 할 수 없다.
-  - 수집 종료 시점에 이를 처리하고자 한다면, `Engine` 내부에 숨겨져 있는 `Scraper` 클래스를 통해 이를 처리할 수 있다.
-    - `Spider` 를 기반으로 이를 하고자 한다면 `spider.crawler.engine.scraper.handle_spider_output` 을 Item 목록에 적용하고, 적용된 `Deferred` 객체를 반환하면 된다.
+    - 수집 종료 시점에 이를 처리하고자 한다면, `Engine` 내부에 숨겨져 있는 `Scraper` 클래스를 통해 이를 처리할 수 있다.
+        - `Spider` 를 기반으로 이를 하고자 한다면 `spider.crawler.engine.scraper.handle_spider_output` 을 Item 목록에 적용하고, 적용된 `Deferred` 객체를 반환하면 된다.
 - `Scraper` 클래스가 Item Pipeline 과 관련된 전반적인 생애 주기를 담당한다.
-  - `Scraper` 클래스는 `ItemPipelineManager` 클래스를 사용하여 아이템 파이프라인과 Spider 에서 `Yield` 처리 된 Item 의 핸들링까지 모두 처리한다.
+    - `Scraper` 클래스는 `ItemPipelineManager` 클래스를 사용하여 아이템 파이프라인과 Spider 에서 `Yield` 처리 된 Item 의 핸들링까지 모두 처리한다.
 - 기존 컴포넌트, 시그널 핸들러, `Feed Exports` 와 관련된 기능을 사용하면서 Item 처리를 하려는 경우 Item Pipeline 을 거쳐야 하며, 이 또한 `Scraper` 클래스를 사용하여 처리할 수 있다.
